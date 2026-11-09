@@ -219,7 +219,6 @@ export default function App() {
         <div className="mx-auto flex max-w-[1220px] flex-col gap-5 px-5 py-10 sm:px-8 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4"><span className="display text-[22px] text-[#0E1116]">AUTOMATA<span className="text-[#FF5A00]">.</span></span><p className="max-w-[320px] text-[13px] leading-snug text-[#5A6068]">Tecnología que trabaja para simplificar el negocio.</p></div>
           <p className="flex items-center gap-2 text-[13px] font-semibold text-[#5A6068]"><Sparkles size={15} className="text-[#FF5A00]" />No presentamos demos como clientes reales.</p>
-          <NewsletterSignup />
         </div>
       </footer>
       <ChatWidget />
