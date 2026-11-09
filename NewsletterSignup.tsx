@@ -56,7 +56,7 @@ export default function NewsletterSignup() {
           </label>
           <button type="submit" disabled={!consent || !contact.trim() || busy} className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#FF5A00] px-5 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-50">{busy ? "Registrando..." : "Quiero recibir novedades"} <ArrowRight size={17} /></button>
           {status && <p role="status" className={"mt-4 flex items-start gap-2 text-xs leading-relaxed " + (status.ok ? "text-green-700" : "text-red-700")}>{status.ok && <CheckCircle2 size={16} className="shrink-0" />}{status.text}</p>}
-          <p className="mt-4 text-[10px] leading-relaxed text-[#8A8F96]">Solo guardamos el canal y contacto que compartes, junto con la fecha y el texto de tu autorización. No vendemos tu contacto. La gestión de bajas estará disponible al iniciar los envíos de campañas.</p>
+          <p className="mt-4 text-[10px] leading-relaxed text-[#8A8F96]">Solo guardamos el canal y contacto que compartes, junto con la fecha y el texto de tu autorización. No vendemos tu contacto. Puedes solicitar la baja escribiéndonos por <a className="font-bold underline" href="https://wa.me/59176192899?text=Solicito%20darme%20de%20baja%20de%20las%20novedades%20de%20Automata" target="_blank" rel="noreferrer">WhatsApp</a>.</p>
         </form>
       </div>
     </section>
