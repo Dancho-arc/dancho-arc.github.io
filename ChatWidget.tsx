@@ -25,10 +25,10 @@ function buildHandoffSummary(messages: Message[]) {
   const userMessages = messages
     .filter((message) => message.role === "user")
     .map((message) => message.text.trim())
-    .filter((message) => message.length > 12);
+    .filter((message) => message.length > 12 && !requestsHumanHandoff(message));
   const allText = userMessages.join(" ");
   const normalized = normalize(allText);
-  const compact = (value: string, max = 150) => {
+  const compact = (value: string, max = 120) => {
     const cleaned = value.replace(/\s+/g, " ").replace(/^[\s,;:.!?¿¡-]+|[\s,;:.!?¿¡-]+$/g, "").trim();
     return cleaned.length > max ? cleaned.slice(0, max - 1).trimEnd() + "…" : cleaned;
   };
@@ -46,9 +46,16 @@ function buildHandoffSummary(messages: Message[]) {
     /(?:soy propietario(?: de)?|soy dueño(?: de)?|tengo (?:un|una)|mi negocio es|me dedico a)\s+([^.!?]+)/i,
     /(?:empresa de|negocio de|servicio de)\s+([^.!?]+)/i
   ]);
+  const expansion = firstMatch([
+    /(?:me estoy expandiendo|nos estamos expandiendo|expansión)\s+(?:de\s+)?([^,.!?]+?\s+a\s+[^,.!?]+)/i,
+    /(?:abrir|llegar|expandirme|expandirnos)\s+(?:de\s+)?([^,.!?]+?\s+a\s+[^,.!?]+)/i
+  ]);
   const objective = firstMatch([
-    /(?:necesito|quiero|busco|mi objetivo es|me gustaría)\s+(.{1,120}?)(?:\s+(?:ya que|porque|debido a|para)\b|[,!.?]|$)/i,
-    /(?:ampliar|expandir|aumentar|captar)\s+(.{1,100}?)(?:\s+(?:ya que|porque|debido a|para)\b|[,!.?]|$)/i
+    /(?:necesito|quiero|busco|mi objetivo es|me gustaría)\s+(.{1,100}?)(?:\s+(?:ya que|porque|debido a|para)\b|[,!.?]|$)/i,
+    /(?:ampliar|expandir|aumentar|captar)\s+(.{1,90}?)(?:\s+(?:ya que|porque|debido a|para)\b|[,!.?]|$)/i
+  ]);
+  const problem = firstMatch([
+    /(?:pierdo|estoy perdiendo|se me escapan|no logro)\s+(.{1,100}?)(?:[,!.?]|$)/i
   ]);
   const budgetMatch = allText.match(/(?:presupuesto|cuento con|dispongo de)[^.!?]{0,45}?(\d[\d.,\s]*\s?(?:bs\.?|bolivianos))/i)
     || allText.match(/(\d[\d.,\s]*\s?(?:bs\.?|bolivianos))/i);
@@ -58,29 +65,32 @@ function buildHandoffSummary(messages: Message[]) {
   const needs: string[] = [];
   const needRules: Array<[RegExp, string]> = [
     [/\b(web|pagina web|sitio web)\b/, "Página web"],
-    [/\b(cita|citas|agenda|reservas)\b/, "Gestión de citas"],
-    [/\b(inventario|repuestos|stock)\b/, "Control de inventario/repuestos"],
-    [/\b(whatsapp|pedidos)\b/, "Atención y pedidos por WhatsApp"],
+    [/\b(cita|citas|agenda|reservas)\b/, "Agenda y distribución de citas"],
+    [/\b(inventario|repuestos|stock)\b/, "Control de inventario de repuestos"],
+    [/\b(whatsapp|pedidos)\b/, "Atención por WhatsApp"],
     [/\b(publicidad|campana|anuncios)\b/, "Publicidad y captación"],
     [/\b(chatbot|asistente|automatizacion)\b/, "Asistente o automatización"]
   ];
   for (const [pattern, label] of needRules) if (pattern.test(normalized)) needs.push(label);
 
+  const askedForHuman = messages.some((message) => message.role === "user" && requestsHumanHandoff(message));
+  const askedAboutPricing = /\b(precio|precios|cotizacion|cotizar|costo|costos|presupuesto)\b/.test(normalized);
   const lines = [
-    "NUEVA OPORTUNIDAD COMERCIAL | AUTOMATA",
-    "",
-    business ? "Actividad: " + business : "",
-    cities.length ? "Ubicación / mercado: " + cities.join(", ") : "",
+    "FICHA COMERCIAL | AUTOMATA",
+    business ? "Negocio: " + business : "",
+    expansion ? "Expansión: " + expansion : (cities.length ? "Mercado: " + cities.join(", ") : ""),
     objective ? "Objetivo: " + objective : "",
-    needs.length ? "Necesidades: " + needs.join("; ") : "",
-    budgetMatch ? "Presupuesto mencionado: " + compact(budgetMatch[1], 60) : "",
-    "",
-    "Solicitud: contacto del equipo para evaluar alcance, opciones y cotización.",
-    "Nota: resumen elaborado a partir de los datos compartidos por el visitante; confirmar los detalles pendientes directamente con él."
+    problem ? "Problema: " + problem : "",
+    needs.length ? "Solución solicitada: " + needs.join("; ") : "",
+    budgetMatch ? "Presupuesto indicado: " + compact(budgetMatch[1], 50) : "",
+    askedForHuman
+      ? "Siguiente paso: contacto humano para continuar el diagnóstico y revisar alcance/precio."
+      : (askedAboutPricing ? "Siguiente paso: aclarar alcance y preparar una cotización." : "Siguiente paso: continuar el diagnóstico comercial."),
+    "Nota interna: datos resumidos de lo compartido por el cliente; confirmar cualquier detalle pendiente."
   ].filter(Boolean);
-  if (!business && !objective && !needs.length && !budgetMatch && !cities.length) {
-    const lastSubstantive = [...userMessages].reverse().find((message) => !requestsHumanHandoff(message) && message.length > 25);
-    lines.splice(2, 0, "Motivo de consulta: " + (lastSubstantive ? compact(lastSubstantive, 180) : "El visitante solicita contacto con el equipo."));
+  if (!business && !objective && !needs.length && !budgetMatch && !cities.length && !problem) {
+    const lastSubstantive = [...userMessages].reverse().find((message) => message.length > 25);
+    lines.splice(1, 0, "Motivo: " + (lastSubstantive ? compact(lastSubstantive, 160) : "El visitante solicita contacto con el equipo."));
   }
   return lines.join("\n");
 }
