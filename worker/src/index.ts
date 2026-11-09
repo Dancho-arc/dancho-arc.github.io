@@ -224,11 +224,12 @@ export default {
 
       return json({ answer }, 200, origin);
     } catch (error) {
-      console.error(
-        "Gemini request exception:",
-        error instanceof Error ? error.name : "unknown"
-      );
-      return json({ error: "No pudimos conectar con el asistente. Revisa tu conexión e inténtalo nuevamente." }, 502, origin);
+      const diagnostic = error instanceof Error ? error.name : "unknown";
+      console.error("Gemini request exception:", diagnostic);
+      return json({
+        error: "No pudimos conectar con el asistente. Revisa tu conexión e inténtalo nuevamente.",
+        diagnostic
+      }, 502, origin);
     }
   },
 };
