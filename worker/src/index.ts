@@ -338,7 +338,7 @@ export default {
     }
 
     if (env.GEMINI_API_KEY) {
-      const geminiModel = env.GEMINI_MODEL || "gemini-2.5-flash";
+      const geminiModel = env.GEMINI_MODEL || "gemini-3.5-flash-lite";
       providers.push({
         name: "gemini",
         run: () => attemptProvider(
@@ -371,7 +371,7 @@ export default {
             "Content-Type": "application/json",
           },
           {
-            model: env.GROQ_MODEL || "openai/gpt-oss-120b",
+            model: env.GROQ_MODEL || "openai/gpt-oss-20b",
             messages: openAiMessages,
             max_completion_tokens: 700,
           },
