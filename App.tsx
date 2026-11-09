@@ -1,21 +1,22 @@
 import React, { useState } from "react";
 import ChatWidget from "./ChatWidget";
-import { ArrowDown, ArrowRight, Bot, CalendarCheck, Check, ChevronDown, Clock, Coffee, CupSoda, CakeSlice, Menu, MessageCircle, Minus, Plus, Sandwich, Scissors, Sparkles, Globe, Workflow, Brain, ShoppingBag, X } from "lucide-react";
+import { ArrowDown, ArrowRight, Bot, CalendarCheck, Check, ChevronDown, Clock, Coffee, CupSoda, CakeSlice, Clapperboard, Menu, MessageCircle, Minus, Plus, Sandwich, Scissors, Sparkles, Globe, Workflow, Brain, ShoppingBag, X } from "lucide-react";
 import logoFull from "./assets/42a5f50319bf92a6-automataF.png";
 import iconOnly from "./assets/d3d0ef7bd1bb0246-automata.png";
 
 const pain = [
   { n: "01", icon: MessageCircle, title: "Respondes lo mismo 20 veces al día", after: "Lo responde Autómata.", color: "#FFF1E8" },
   { n: "02", icon: ShoppingBag, title: "Pedidos por WhatsApp desordenados", after: "Pedidos ordenados.", color: "#F2F0FF" },
-  { n: "03", icon: CalendarCheck, title: "Citas por mensaje", after: "Reservas solas.", color: "#E8FFF3" },
+  { n: "03", icon: CalendarCheck, title: "Citas por mensaje", after: "Solicitudes organizadas.", color: "#E8FFF3" },
 ];
 
 const solutions = [
   { icon: Bot, title: "Asistentes que responden", line: "Respuestas claras en web y WhatsApp.", example: "Ejemplo: tu cafetería responde menú, horario y ubicación sin esperar.", color: "#FF5A00", bg: "#FFF1E8" },
-  { icon: ShoppingBag, title: "Pedidos y reservas", line: "Pedidos, citas y reservas sin caos.", example: "Ejemplo: el cliente pide, reserva y recibe confirmación en orden.", color: "#6C3BFF", bg: "#F2F0FF" },
-  { icon: Globe, title: "Sitios web vivos", line: "Webs que venden, no solo se ven.", example: "Ejemplo: catálogo siempre actualizado, sin mensajes sueltos.", color: "#007AFF", bg: "#EAF4FF" },
+  { icon: ShoppingBag, title: "Pedidos y reservas", line: "Pedidos, citas y reservas sin caos.", example: "Ejemplo: el cliente envía una solicitud y el negocio confirma según su disponibilidad.", color: "#6C3BFF", bg: "#F2F0FF" },
+  { icon: Globe, title: "Sitios web", line: "Webs que presentan y captan consultas.", example: "Ejemplo: una página clara con servicios, productos y un canal de contacto.", color: "#007AFF", bg: "#EAF4FF" },
   { icon: Workflow, title: "Procesos automáticos", line: "Lo repetitivo, en piloto automático.", example: "Ejemplo: registros, reportes y avisos se hacen solos.", color: "#00A86B", bg: "#E8FFF3" },
   { icon: Brain, title: "IA bien aplicada", line: "IA donde suma, con reglas claras.", example: "Ejemplo: clasifica consultas y resume información para tu equipo.", color: "#E11D63", bg: "#FFEAF1" },
+  { icon: Clapperboard, title: "Publicidad audiovisual", line: "Videos, anuncios y campañas con IA + producción real.", example: "Ejemplo: una pieza para presentar tu producto, combinando recursos de IA y grabación real.", color: "#FF5A00", bg: "#FFF1E8" },
 ];
 
 const dishes = [
@@ -83,7 +84,7 @@ export default function App() {
             <div>
               <p className="reveal flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.22em] text-[#FF5A00]"><span className="h-[8px] w-[8px] rounded-full bg-[#FF5A00]" />Tarija • Bolivia</p>
               <h1 className="reveal-2 display mt-5 text-[44px] sm:text-[72px] lg:text-[92px]">Tu negocio no necesita más tecnología.<br /><span className="text-[#FF5A00]">Necesita que funcione.</span></h1>
-              <p className="reveal-3 mt-6 text-[18px] font-medium leading-snug text-[#5A6068] sm:text-[20px]">Automatizamos lo repetitivo para que atiendas mejor.</p>
+              <p className="reveal-3 mt-6 text-[18px] font-medium leading-snug text-[#5A6068] sm:text-[20px]">Tecnología, creatividad e IA para resolver necesidades reales de tu negocio.</p>
               <div className="reveal-3 mt-8 flex flex-col gap-3 sm:flex-row">
                 <a href="#demos" className="flex min-h-[56px] flex-1 items-center justify-center gap-2 rounded-full bg-[#0E1116] px-7 text-[15px] font-bold text-white sm:flex-none">Ver demos en vivo <ArrowDown size={18} /></a>
                 <button type="button" onClick={openAssistant} className="flex min-h-[56px] flex-1 items-center justify-center gap-2 rounded-full border-2 border-[#0E1116] px-7 text-[15px] font-bold sm:flex-none">Hablar con Autómata <Bot size={18} /></button>
@@ -99,7 +100,7 @@ export default function App() {
             </div>
           </div>
           <div className="overflow-hidden border-y-2 border-[#0E1116] bg-[#FF5A00] py-3 text-white">
-            <div className="marquee-track flex w-max whitespace-nowrap"><span className="display text-[22px] uppercase">Asistentes • Pedidos • Reservas • Webs • Automatización • IA •&nbsp;</span><span className="display text-[22px] uppercase">Asistentes • Pedidos • Reservas • Webs • Automatización • IA •&nbsp;</span></div>
+            <div className="marquee-track flex w-max whitespace-nowrap"><span className="display text-[22px] uppercase">Asistentes • Pedidos • Reservas • Webs • Automatización • Publicidad audiovisual • Campañas • IA •&nbsp;</span><span className="display text-[22px] uppercase">Asistentes • Pedidos • Reservas • Webs • Automatización • Publicidad audiovisual • Campañas • IA •&nbsp;</span></div>
           </div>
         </section>
 
@@ -116,14 +117,17 @@ export default function App() {
         <section id="soluciones" className="bg-[#0E1116] py-16 text-white sm:py-20 lg:py-24">
           <div className="mx-auto max-w-[1220px] px-5 sm:px-8">
             <p className="text-[12px] font-bold uppercase tracking-[0.22em] text-[#FF5A00]">Soluciones</p>
-            <div className="flex flex-wrap items-end justify-between gap-4"><h2 className="display mt-4 text-[44px] sm:text-[64px]">Cinco formas<br />de avanzar.</h2><p className="max-w-[260px] text-[15px] leading-snug text-white/60">Toca una tarjeta. Ve el ejemplo. Sin texto largo.</p></div>
+            <div className="flex flex-wrap items-end justify-between gap-4"><h2 className="display mt-4 text-[44px] sm:text-[64px]">Seis formas<br />de avanzar.</h2><p className="max-w-[260px] text-[15px] leading-snug text-white/60">Toca una tarjeta. Ve el ejemplo. Sin texto largo.</p></div>
             <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {solutions.map((s, i) => { const open = openSolution === i; return (
-                <article key={s.title} className={`card-lift overflow-hidden rounded-[28px] p-6 text-[#0E1116] sm:p-7 ${i === 4 ? "sm:col-span-2 lg:col-span-1" : ""}`} style={{ background: s.bg }}>
+                <article key={s.title} className="card-lift overflow-hidden rounded-[28px] p-6 text-[#0E1116] sm:p-7" style={{ background: s.bg }}>
                   <button onClick={() => setOpenSolution(open ? null : i)} aria-expanded={open} className="w-full text-left"><div className="flex items-start justify-between"><span className="flex h-[58px] w-[58px] items-center justify-center rounded-2xl text-white" style={{ background: s.color }}><s.icon size={28} /></span><ChevronDown size={22} className={`transition-transform ${open ? "rotate-180" : ""}`} /></div><h3 className="display mt-8 text-[30px] leading-[0.95]">{s.title}</h3><p className="mt-3 text-[15px] font-medium text-[#5A6068]">{s.line}</p></button>
                   {open && <p className="pop mt-5 rounded-2xl bg-white p-4 text-[14px] font-semibold leading-snug">{s.example}</p>}
                 </article>); })}
-              <div className="flex flex-col justify-between rounded-[28px] bg-[#FF5A00] p-6 text-white sm:p-7"><h3 className="display text-[32px] leading-[0.95]">¿Cuál es tu cuello de botella?</h3><button type="button" onClick={openAssistant} className="mt-8 flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-white px-5 text-[14px] font-bold text-[#0E1116]">Cuéntanos <ArrowRight size={17} /></button></div>
+            </div>
+            <div className="mt-5 flex flex-col items-start justify-between gap-5 rounded-[28px] border border-white/15 bg-white/[0.04] p-6 sm:flex-row sm:items-center sm:p-7">
+              <div><h3 className="display text-[30px] leading-tight">¿Qué necesita tu negocio?</h3><p className="mt-2 max-w-[520px] text-[14px] leading-relaxed text-white/60">Cuéntaselo a Autómata. Primero entendemos el problema; después definimos qué solución tiene sentido.</p></div>
+              <button type="button" onClick={openAssistant} className="flex min-h-[52px] shrink-0 items-center justify-center gap-2 rounded-full bg-[#FF5A00] px-6 text-[14px] font-bold text-white">Hablar con Autómata <ArrowRight size={17} /></button>
             </div>
           </div>
         </section>

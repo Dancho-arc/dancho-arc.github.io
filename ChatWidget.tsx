@@ -82,6 +82,8 @@ const intents: Intent[] = [
 ];
 
 const quick = ["¿Qué hace Automata?", "¿Hacen publicidad con IA?", "Tengo un negocio de vinos", "Quiero automatizar pedidos por WhatsApp"];
+const CHAT_API_URL = (import.meta.env.VITE_AUTOMATA_API_URL || "").replace(/\/+$/, "");
+const LOCAL_SESSION_ID = () => typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `session-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 const fallback = "No quiero darte una respuesta al azar. Puedo orientarte sobre tecnología, asistentes digitales, WhatsApp, sitios web, automatización, publicidad audiovisual con IA y campañas. Cuéntame qué tipo de negocio tienes y qué te gustaría conseguir.";
 
 function normalize(value: string) {
@@ -92,6 +94,10 @@ function answerFor(input: string) {
   const normalized = normalize(input);
   const tokens = new Set(normalized.split(" ").filter(Boolean));
   if (!normalized) return fallback;
+
+  if (/(publicidad|anuncio|campana)/.test(normalized) && /(video|audiovisual|ia|inteligencia artificial)/.test(normalized)) {
+    return intents.find((intent) => intent.id === "marketing")!.answer;
+  }
 
   if (/^(hola|buenas|buenos dias|buenas tardes|buenas noches|hey|que tal)$/.test(normalized)) {
     return "¡Hola! Puedo contarte qué hace Automata o ayudarte a identificar una solución para tu negocio. ¿Qué te gustaría resolver?";
@@ -121,37 +127,21 @@ function answerFor(input: string) {
 }
 
 function buildHandoffSummary(messages: Message[]) {
-  const userMessages = messages.filter((message) => message.role === "user").map((message) => message.text.trim()).filter(Boolean);
-  const allText = normalize(userMessages.join(" "));
+  const userMessages = messages
+    .filter((message) => message.role === "user")
+    .map((message) => message.text.trim())
+    .filter(Boolean);
   const lines = [
     "Hola, equipo de Automata. Quiero continuar una consulta que inicié en su asistente web.",
     "",
-    "RESUMEN DE LA CONVERSACIÓN",
-    "Este resumen se preparó a partir de los mensajes que escribí en el asistente."
+    "CONTEXTO COMPARTIDO",
+    "Se incluyen hasta los ocho mensajes más recientes que escribí en el asistente, para que el equipo pueda continuar la conversación sin pedirme que repita esa parte del contexto."
   ];
-
-  const businessTypes = [
-    { label: "Vinos / bodega", pattern: /\b(vino|vinos|bodega|vinicola)\b/ },
-    { label: "Gastronomía / cafetería", pattern: /\b(cafeteria|cafe|restaurante|comida|gastronomia)\b/ },
-    { label: "Salud / consultorio", pattern: /\b(consultorio|clinica|salud|paciente)\b/ },
-    { label: "Belleza / peluquería", pattern: /\b(peluqueria|salon|belleza|estetica)\b/ },
-    { label: "Comercio / tienda", pattern: /\b(tienda|comercio|distribuyo|distribuidor|vendo|ventas)\b/ }
-  ];
-  const business = businessTypes.find((item) => item.pattern.test(allText));
-  if (business) lines.push("", "Rubro detectado por palabras mencionadas: " + business.label);
-
-  const interests = [
-    { label: "Publicidad audiovisual y campañas", pattern: /\b(publicidad|campana|campanas|anuncio|audiovisual|video)\b/ },
-    { label: "Sitio web o catálogo", pattern: /\b(web|pagina|sitio|catalogo)\b/ },
-    { label: "WhatsApp, consultas o pedidos", pattern: /\b(whatsapp|pedido|pedidos|consultas|clientes)\b/ },
-    { label: "Asistente digital o chatbot", pattern: /\b(asistente|chatbot|chat|bot)\b/ },
-    { label: "Automatización de procesos", pattern: /\b(automatizar|automatizacion|proceso|repetitiva|reportes)\b/ }
-  ];
-  const detected = interests.filter((item) => item.pattern.test(allText)).map((item) => item.label);
-  if (detected.length) lines.push("", "Temas mencionados: " + detected.join("; "));
-
   lines.push("", "MENSAJES DEL CLIENTE");
-  userMessages.slice(-8).forEach((message) => lines.push("• " + message));
+  userMessages.slice(-8).forEach((message) => {
+    const excerpt = message.length > 400 ? message.slice(0, 397) + "..." : message;
+    lines.push("• " + excerpt);
+  });
   lines.push("", "Quisiera continuar la conversación y recibir orientación sobre el siguiente paso.");
   return lines.join("\n");
 }
@@ -163,6 +153,8 @@ export default function ChatWidget() {
   const [handoffText, setHandoffText] = useState("");
   const [shareConsent, setShareConsent] = useState(false);
   const [showHandoff, setShowHandoff] = useState(false);
+  const [isThinking, setIsThinking] = useState(false);
+  const sessionId = useRef(LOCAL_SESSION_ID());
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -171,24 +163,64 @@ export default function ChatWidget() {
     return () => window.removeEventListener("automata:open-chat", show);
   }, []);
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [messages, open, handoffText]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [messages, open, handoffText, isThinking]);
 
-  const send = (value = input) => {
+  const send = async (value = input) => {
     const text = value.trim();
-    if (!text) return;
-    const nextMessages: Message[] = [...messages, { role: "user", text }, { role: "bot", text: answerFor(text) }];
-    setMessages(nextMessages);
-    setHandoffText(buildHandoffSummary(nextMessages));
+    if (!text || isThinking) return;
+    const conversation: Message[] = [...messages, { role: "user", text }];
+    setMessages(conversation);
     setShareConsent(false);
     setShowHandoff(false);
     setInput("");
+    setIsThinking(true);
+
+    let answer = "";
+    if (!CHAT_API_URL) {
+      answer = answerFor(text);
+    } else {
+      try {
+        const response = await fetch(`${CHAT_API_URL}/api/chat`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Chat-Session": sessionId.current
+          },
+          signal: AbortSignal.timeout(30000),
+          body: JSON.stringify({
+            messages: (() => {
+              const recent = conversation.slice(1).slice(-20);
+              if (recent[0]?.role === "bot") recent.shift();
+              return recent.map((message) => ({
+                role: message.role === "user" ? "user" : "model",
+                text: message.text
+              }));
+            })()
+          })
+        });
+        const payload = await response.json().catch(() => ({})) as { answer?: string; error?: string };
+        if (!response.ok || !payload.answer) {
+          throw new Error(payload.error || "No pudimos procesar tu consulta. Inténtalo nuevamente.");
+        }
+        answer = payload.answer;
+      } catch (error) {
+        answer = error instanceof Error && !["TypeError", "AbortError", "TimeoutError"].includes(error.name)
+          ? error.message
+          : "No pudimos conectar con el asistente. Inténtalo nuevamente en unos minutos.";
+      }
+    }
+
+    const completedMessages: Message[] = [...conversation, { role: "bot", text: answer }];
+    setMessages(completedMessages);
+    setHandoffText(buildHandoffSummary(completedMessages));
+    setIsThinking(false);
   };
 
   const submit = (event: FormEvent) => { event.preventDefault(); send(); };
 
   const userMessages = messages.filter((message) => message.role === "user");
   const lastUserMessage = userMessages[userMessages.length - 1]?.text ?? "";
-  const explicitHandoffRequest = /(quiero (hablar|contactar|pasar)|contactar (con|al)|hablar con (alguien|una persona|un asesor)|pasar a whatsapp|continuar por whatsapp|ir a whatsapp|un asesor)/i.test(normalize(lastUserMessage));
+  const explicitHandoffRequest = /(quiero (hablar|contactar|pasar|comunicarme)|necesito (hablar|contactar|comunicarme)|contactar (con|al)|hablar con (alguien|una persona|un asesor|el equipo)|pasar a whatsapp|continuar por whatsapp|ir a whatsapp|comunicarme con|asesor|persona del equipo)/i.test(normalize(lastUserMessage));
   const canOfferHandoff = userMessages.length >= 3 || explicitHandoffRequest;
 
   const continueOnWhatsApp = () => {
@@ -207,7 +239,7 @@ export default function ChatWidget() {
         </header>
         <div className="automata-chat-messages" aria-live="polite">
           {messages.map((message, index) => <div key={index} className={`automata-chat-message ${message.role}`}>{message.text}</div>)}
-          {messages.length === 1 && <div className="automata-chat-quick">{quick.map((question) => <button key={question} type="button" onClick={() => send(question)}>{question}</button>)}</div>}
+          {messages.length === 1 && <div className="automata-chat-quick">{quick.map((question) => <button key={question} type="button" disabled={isThinking} onClick={() => send(question)}>{question}</button>)}</div>}
           {canOfferHandoff && !showHandoff && <button type="button" className="automata-handoff-button" onClick={() => setShowHandoff(true)}>Preparar resumen para WhatsApp</button>}
           {showHandoff && <section className="automata-handoff">
             <div className="automata-handoff-heading"><strong>Continúa sin repetir tu historia</strong><span>Tu resumen para WhatsApp</span></div>
@@ -217,13 +249,14 @@ export default function ChatWidget() {
             <label className="automata-handoff-consent"><input type="checkbox" checked={shareConsent} onChange={(event) => setShareConsent(event.target.checked)} /> Autorizo compartir este resumen y los mensajes incluidos con el equipo de Automata por WhatsApp.</label>
             <button type="button" className="automata-handoff-button" onClick={continueOnWhatsApp} disabled={!shareConsent || !handoffText.trim()}><MessageCircle size={17} /> Continuar por WhatsApp <ArrowUpRight size={16} /></button>
           </section>}
+          {isThinking && <div className="automata-chat-message bot" role="status">Autómata está pensando...</div>}
           <div ref={bottomRef} />
         </div>
         <form className="automata-chat-compose" onSubmit={submit}>
-          <input value={input} onChange={(event) => setInput(event.target.value)} placeholder="Escribe tu consulta..." aria-label="Escribe tu consulta" />
-          <button type="submit" disabled={!input.trim()} aria-label="Enviar mensaje"><Send size={18} /></button>
+          <input value={input} onChange={(event) => setInput(event.target.value)} placeholder="Escribe tu consulta..." aria-label="Escribe tu consulta" maxLength={1800} disabled={isThinking} />
+          <button type="submit" disabled={!input.trim() || isThinking} aria-label="Enviar mensaje"><Send size={18} /></button>
         </form>
-        <p className="automata-chat-note"><Sparkles size={12} /> Asistente orientativo. La transferencia a WhatsApp es voluntaria y editable.</p>
+        <p className="automata-chat-note"><Sparkles size={12} /> {CHAT_API_URL ? "Al enviar, tu consulta se procesa mediante Google Gemini." : "Modo local de demostración."} No incluyas datos sensibles. WhatsApp solo se abre con tu autorización.</p>
       </section>}
       <button type="button" className="automata-chat-launcher" onClick={() => setOpen((value) => !value)} aria-label={open ? "Cerrar asistente" : "Abrir asistente"}>
         {open ? <X size={24} /> : <MessageCircle size={24} />}

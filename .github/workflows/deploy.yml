@@ -19,7 +19,10 @@ jobs:
         with:
           node-version: 22
       - run: npm install
-      - run: npm run build
+      - name: Build site
+        run: npm run build
+        env:
+          VITE_AUTOMATA_API_URL: ${{ vars.VITE_AUTOMATA_API_URL }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
