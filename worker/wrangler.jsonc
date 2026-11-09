@@ -5,7 +5,7 @@
   "compatibility_date": "2026-11-09",
   "workers_dev": true,
   "vars": {
-    "GEMINI_MODEL": "gemini-3.8-flash",
+    "OPENROUTER_MODEL": "nvidia/nemotron-3.5-super-vl:free",
     "ALLOWED_ORIGIN": "https://automata-bo.github.io"
   },
   "ratelimits": [
