@@ -2,31 +2,106 @@ import React, { FormEvent, useEffect, useRef, useState } from "react";
 import { Bot, MessageCircle, Send, Sparkles, X } from "lucide-react";
 
 type Message = { role: "bot" | "user"; text: string };
+type Intent = { id: string; phrases: string[]; terms: string[]; answer: string };
 
-const knowledge = [
-  { keys: ["que es automata", "que hacen", "a que se dedican", "quienes son", "que ofrece", "servicios"], answer: "Automata diseña y desarrolla soluciones digitales para que los negocios atiendan mejor y pierdan menos tiempo en tareas repetitivas. Trabajamos con asistentes digitales, flujos de pedidos y reservas, sitios web, integraciones y automatización de procesos. Primero entendemos el problema; después proponemos la solución adecuada." },
-  { keys: ["whatsapp", "pedidos", "pedido", "menu", "catalogo"], answer: "Podemos diseñar un flujo para recibir consultas y pedidos por WhatsApp, organizar productos, cantidades y observaciones, y preparar un resumen claro para el negocio. La aceptación del pedido siempre depende del negocio. Nuestro producto de pedidos está en etapa de validación, así que primero evaluamos el proceso y el alcance." },
-  { keys: ["pagina web", "sitio web", "web", "landing", "pagina"], answer: "Sí. Diseñamos sitios web para presentar tu negocio, explicar tus servicios, captar consultas y conectar canales como WhatsApp. El alcance depende de lo que necesites: una web institucional no es lo mismo que una plataforma con usuarios, pagos o panel administrativo." },
-  { keys: ["asistente", "chatbot", "bot", "responder", "preguntas frecuentes"], answer: "Podemos desarrollar asistentes digitales para responder consultas con información aprobada, orientar a clientes y derivar casos a una persona. Si necesita consultar sistemas, disponibilidad o datos privados, primero evaluamos las integraciones y las medidas de seguridad." },
-  { keys: ["reserva", "reservas", "cita", "agenda", "turno"], answer: "Podemos diseñar un flujo de solicitudes de citas o reservas, con selección de servicio y datos necesarios. Para confirmar horarios en tiempo real hace falta una fuente de disponibilidad conectada; sin ella, el asistente solo puede recibir una solicitud, no confirmar una cita." },
-  { keys: ["automatizacion", "automatizar", "proceso", "reportes", "registro"], answer: "Automatizamos tareas repetitivas como clasificar consultas, ordenar registros, generar reportes y enviar avisos. Para recomendar algo concreto necesitamos conocer el proceso actual, las herramientas que usa tu equipo y qué resultado esperas." },
-  { keys: ["inteligencia artificial", "ia", "gemini", "modelo"], answer: "Usamos IA cuando aporta valor: por ejemplo, para interpretar mensajes, clasificar consultas o resumir información. Las reglas críticas, los cálculos y las validaciones deben quedar bajo control del software, no de una respuesta improvisada del modelo." },
-  { keys: ["precio", "cuanto cuesta", "cotizacion", "presupuesto", "cobran"], answer: "No tenemos un precio universal. Cada proyecto se cotiza según alcance, integraciones, volumen de uso, mantenimiento y costos de servicios externos. Cuéntanos qué necesitas y podemos preparar una evaluación antes de hablar de cifras." },
-  { keys: ["cuanto demora", "tiempo", "plazo", "cuando estaria"], answer: "El plazo depende del alcance y de las integraciones necesarias. Primero definimos qué debe hacer la solución, qué sistemas intervienen y cómo se comprobará que funciona. No sería serio prometerte una fecha sin revisar eso." },
-  { keys: ["salud", "consultorio", "clinica", "paciente"], answer: "Podemos evaluar herramientas administrativas para consultorios, como solicitudes de cita e información general. No diseñamos asistentes para diagnosticar ni sustituir al personal sanitario, y los datos de salud requieren controles especiales." },
-  { keys: ["hablar con alguien", "persona", "humano", "contacto"], answer: "Claro. Puedes continuar por WhatsApp y contarle tu caso al equipo de Automata. El botón de contacto abrirá una conversación con un mensaje preparado para que lo revises antes de enviarlo." },
+const intents: Intent[] = [
+  {
+    id: "about",
+    phrases: ["que hace automata", "que es automata", "que hacen en automata", "a que se dedica automata", "que ofrece automata", "cuales son sus servicios"],
+    terms: ["servicios", "ofrecen", "dedican"],
+    answer: "Automata diseña y desarrolla soluciones digitales para que los negocios atiendan mejor y pierdan menos tiempo en tareas repetitivas. Trabajamos con asistentes digitales, flujos de pedidos y reservas, sitios web, integraciones y automatización de procesos. Primero entendemos el problema; después proponemos la solución adecuada."
+  },
+  {
+    id: "whatsapp",
+    phrases: ["pedidos por whatsapp", "vender por whatsapp", "recibir pedidos", "organizar pedidos"],
+    terms: ["whatsapp", "pedidos", "pedido", "menu", "catalogo"],
+    answer: "Podemos diseñar un flujo para recibir consultas y pedidos por WhatsApp, organizar productos, cantidades y observaciones, y preparar un resumen claro para el negocio. La aceptación del pedido siempre depende del negocio. Nuestro producto de pedidos está en etapa de validación, así que primero evaluamos el proceso y el alcance."
+  },
+  {
+    id: "web",
+    phrases: ["pagina web", "sitio web", "hacer una web", "crear una pagina", "diseñar una web"],
+    terms: ["web", "landing", "pagina", "sitio"],
+    answer: "Sí. Diseñamos sitios web para presentar tu negocio, explicar tus servicios, captar consultas y conectar canales como WhatsApp. El alcance depende de lo que necesites: una web institucional no es lo mismo que una plataforma con usuarios, pagos o panel administrativo."
+  },
+  {
+    id: "assistant",
+    phrases: ["asistente virtual", "preguntas frecuentes", "responder automaticamente", "bot para mi negocio", "chat para mi pagina"],
+    terms: ["asistente", "chatbot", "bot", "responder"],
+    answer: "Podemos desarrollar asistentes digitales para responder consultas con información aprobada, orientar a clientes y derivar casos a una persona. Si necesita consultar sistemas, disponibilidad o datos privados, primero evaluamos las integraciones y las medidas de seguridad."
+  },
+  {
+    id: "booking",
+    phrases: ["agendar una cita", "reservar una cita", "sistema de reservas", "tomar reservas"],
+    terms: ["reserva", "reservas", "cita", "agenda", "turno"],
+    answer: "Podemos diseñar un flujo de solicitudes de citas o reservas, con selección de servicio y datos necesarios. Para confirmar horarios en tiempo real hace falta una fuente de disponibilidad conectada; sin ella, el asistente solo puede recibir una solicitud, no confirmar una cita."
+  },
+  {
+    id: "automation",
+    phrases: ["automatizar mi negocio", "automatizar tareas", "ahorrar tiempo", "tareas repetitivas", "automatizar procesos"],
+    terms: ["automatizacion", "automatizar", "proceso", "reportes", "registro"],
+    answer: "Automatizamos tareas repetitivas como clasificar consultas, ordenar registros, generar reportes y enviar avisos. Para recomendar algo concreto necesitamos conocer el proceso actual, las herramientas que usa tu equipo y qué resultado esperas."
+  },
+  {
+    id: "ai",
+    phrases: ["inteligencia artificial", "usan inteligencia artificial", "trabajan con ia"],
+    terms: ["ia", "gemini", "modelo"],
+    answer: "Usamos IA cuando aporta valor: por ejemplo, para interpretar mensajes, clasificar consultas o resumir información. Las reglas críticas, los cálculos y las validaciones deben quedar bajo control del software, no de una respuesta improvisada del modelo."
+  },
+  {
+    id: "price",
+    phrases: ["cuanto cuesta", "cual es el precio", "cuanto cobran", "que precio tiene", "necesito una cotizacion"],
+    terms: ["precio", "cotizacion", "presupuesto", "cobran", "costo"],
+    answer: "No tenemos un precio universal. Cada proyecto se cotiza según alcance, integraciones, volumen de uso, mantenimiento y costos de servicios externos. Cuéntanos qué necesitas y podemos preparar una evaluación antes de hablar de cifras."
+  },
+  {
+    id: "timing",
+    phrases: ["cuanto demora", "cuanto tarda", "cuando estaria listo", "cual es el plazo"],
+    terms: ["demora", "tarda", "plazo", "tiempo"],
+    answer: "El plazo depende del alcance y de las integraciones necesarias. Primero definimos qué debe hacer la solución, qué sistemas intervienen y cómo se comprobará que funciona. No sería serio prometerte una fecha sin revisar eso."
+  },
+  {
+    id: "health",
+    phrases: ["para un consultorio", "para una clinica", "sistema para pacientes"],
+    terms: ["salud", "consultorio", "clinica", "paciente"],
+    answer: "Podemos evaluar herramientas administrativas para consultorios, como solicitudes de cita e información general. No diseñamos asistentes para diagnosticar ni sustituir al personal sanitario, y los datos de salud requieren controles especiales."
+  },
+  {
+    id: "contact",
+    phrases: ["hablar con alguien", "quiero un asesor", "contactar al equipo", "hablar con una persona"],
+    terms: ["humano", "asesor", "contacto", "persona"],
+    answer: "Puedes continuar por WhatsApp y contarle tu caso al equipo de Automata. El botón de contacto abrirá una conversación con un mensaje preparado para que lo revises antes de enviarlo."
+  }
 ];
 
 const quick = ["¿Qué hace Automata?", "Quiero automatizar pedidos por WhatsApp", "Necesito una página web", "¿Cuánto cuesta?"];
+const fallback = "No quiero darte una respuesta al azar. Puedo orientarte sobre lo que hacemos: asistentes digitales, WhatsApp y pedidos, sitios web, reservas, automatización e IA. Cuéntame un poco más sobre el resultado que buscas o contacta al equipo por WhatsApp.";
+
+function normalize(value: string) {
+  return value.toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
+}
 
 function answerFor(input: string) {
-  const normalized = input.toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[¿?¡!.,]/g, "");
-  const ranked = knowledge.map((item) => ({
-    item,
-    score: item.keys.reduce((score, key) => score + (normalized.includes(key.normalize("NFD").replace(/[\u0300-\u036f]/g, "")) ? 1 : 0), 0),
-  })).sort((a, b) => b.score - a.score);
-  if (ranked[0]?.score > 0) return ranked[0].item.answer;
-  return "Puedo orientarte sobre asistentes digitales, WhatsApp, pedidos, reservas, sitios web e IA. Para una necesidad más específica, cuéntame qué quieres lograr y te diré si encaja con lo que desarrollamos o si necesita una evaluación técnica. No voy a inventarte una respuesta ni prometerte algo sin revisar el caso.";
+  const normalized = normalize(input);
+  const tokens = new Set(normalized.split(" ").filter(Boolean));
+  if (!normalized) return fallback;
+
+  if (/^(hola|buenas|buenos dias|buenas tardes|buenas noches|hey|que tal)$/.test(normalized)) {
+    return "¡Hola! Puedo contarte qué hace Automata o ayudarte a identificar una solución para tu negocio. ¿Qué te gustaría resolver?";
+  }
+  if (/(gracias|muchas gracias)/.test(normalized)) {
+    return "¡Con gusto! Si quieres, cuéntame qué proceso de tu negocio te gustaría mejorar y te orientaré sobre el siguiente paso.";
+  }
+
+  const ranked = intents.map((intent) => {
+    const phraseScore = intent.phrases.reduce((score, phrase) => normalized.includes(normalize(phrase)) ? score + 4 : score, 0);
+    const termScore = intent.terms.reduce((score, term) => tokens.has(normalize(term)) ? score + (term.length <= 3 ? 2 : 1) : score, 0);
+    return { intent, score: phraseScore + termScore };
+  }).sort((a, b) => b.score - a.score);
+
+  const best = ranked[0];
+  const second = ranked[1];
+  if (best && best.score >= 2 && (!second || best.score > second.score)) return best.intent.answer;
+  return fallback;
 }
 
 export default function ChatWidget() {
