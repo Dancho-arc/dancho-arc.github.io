@@ -1,5 +1,5 @@
 import React, { FormEvent, useState } from "react";
-import { ArrowRight, CheckCircle2, Mail, MessageCircle } from "lucide-react";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 
 const API = "https://automata-chat.dgckg-trd1.workers.dev";
 const CONSENT_VERSION = "2026-11-09-v1";
