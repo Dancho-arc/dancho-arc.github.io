@@ -166,7 +166,7 @@ export default function ChatWidget() {
           <input value={input} onChange={(event) => setInput(event.target.value)} placeholder="Escribe tu consulta..." aria-label="Escribe tu consulta" maxLength={1800} disabled={isThinking} />
           <button type="submit" disabled={!input.trim() || isThinking} aria-label="Enviar mensaje"><Send size={18} /></button>
         </form>
-        <p className="automata-chat-note"><Sparkles size={12} /> Asistente con IA de Automata · OpenRouter. No incluyas datos sensibles. Escribir una autorización en el chat no envía mensajes; el envío se inicia al pulsar Continuar por WhatsApp.</p>
+        <p className="automata-chat-note"><Sparkles size={12} /> Asistente con IA de Automata · proveedores alternativos. No incluyas datos sensibles. Escribir una autorización en el chat no envía mensajes; el envío se inicia al pulsar Continuar por WhatsApp.</p>
       </section>}
       <button type="button" className="automata-chat-launcher" onClick={() => { if (!open) trackEvent("chat_open"); setOpen((value) => !value); }} aria-label={open ? "Cerrar asistente" : "Abrir asistente"}>
         {open ? <X size={24} /> : <MessageCircle size={24} />}
