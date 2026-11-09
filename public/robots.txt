@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://automata-bo.github.io/sitemap.xml
