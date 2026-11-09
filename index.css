@@ -92,3 +92,6 @@ label{font-size:13px;font-weight:700;letter-spacing:.02em}
 .automata-handoff-consent input{width:16px;height:16px;flex:0 0 16px;margin:0;accent-color:#FF5A00}
 .automata-handoff-button{display:flex;min-height:44px;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;background:#FF5A00;color:#fff;font-size:12px;font-weight:800;cursor:pointer}
 .automata-handoff-button:disabled{opacity:.4;cursor:not-allowed}
+
+.automata-handoff-back{align-self:flex-start;padding:6px 0;border:0;background:transparent;color:#5A6068;font-size:11px;font-weight:700;text-decoration:underline;cursor:pointer}
+.automata-handoff-button{width:100%;padding:0 14px}

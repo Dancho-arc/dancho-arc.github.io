@@ -162,6 +162,7 @@ export default function ChatWidget() {
   const [messages, setMessages] = useState<Message[]>([{ role: "bot", text: "¡Hola! Soy el asistente virtual de Automata. Puedo contarte qué hacemos y ayudarte a identificar oportunidades para tu negocio. ¿Qué necesitas resolver?" }]);
   const [handoffText, setHandoffText] = useState("");
   const [shareConsent, setShareConsent] = useState(false);
+  const [showHandoff, setShowHandoff] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -179,10 +180,16 @@ export default function ChatWidget() {
     setMessages(nextMessages);
     setHandoffText(buildHandoffSummary(nextMessages));
     setShareConsent(false);
+    setShowHandoff(false);
     setInput("");
   };
 
   const submit = (event: FormEvent) => { event.preventDefault(); send(); };
+
+  const userMessages = messages.filter((message) => message.role === "user");
+  const lastUserMessage = userMessages[userMessages.length - 1]?.text ?? "";
+  const explicitHandoffRequest = /(quiero (hablar|contactar|pasar)|contactar (con|al)|hablar con (alguien|una persona|un asesor)|pasar a whatsapp|continuar por whatsapp|ir a whatsapp|un asesor)/i.test(normalize(lastUserMessage));
+  const canOfferHandoff = userMessages.length >= 3 || explicitHandoffRequest;
 
   const continueOnWhatsApp = () => {
     if (!shareConsent || !handoffText.trim()) return;
@@ -201,8 +208,10 @@ export default function ChatWidget() {
         <div className="automata-chat-messages" aria-live="polite">
           {messages.map((message, index) => <div key={index} className={`automata-chat-message ${message.role}`}>{message.text}</div>)}
           {messages.length === 1 && <div className="automata-chat-quick">{quick.map((question) => <button key={question} type="button" onClick={() => send(question)}>{question}</button>)}</div>}
-          {messages.some((message) => message.role === "user") && <section className="automata-handoff">
+          {canOfferHandoff && !showHandoff && <button type="button" className="automata-handoff-button" onClick={() => setShowHandoff(true)}>Preparar resumen para WhatsApp</button>}
+          {showHandoff && <section className="automata-handoff">
             <div className="automata-handoff-heading"><strong>Continúa sin repetir tu historia</strong><span>Tu resumen para WhatsApp</span></div>
+            <button type="button" className="automata-handoff-back" onClick={() => setShowHandoff(false)}>Volver a conversar</button>
             <p className="automata-handoff-copy">Revisa y edita lo que compartiremos con el equipo de Automata. Solo se enviará si marcas tu autorización y pulsas el botón.</p>
             <textarea aria-label="Resumen editable para WhatsApp" value={handoffText} onChange={(event) => { setHandoffText(event.target.value); setShareConsent(false); }} rows={8} />
             <label className="automata-handoff-consent"><input type="checkbox" checked={shareConsent} onChange={(event) => setShareConsent(event.target.checked)} /> Autorizo compartir este resumen y los mensajes incluidos con el equipo de Automata por WhatsApp.</label>
