@@ -114,6 +114,8 @@ export default function ChatWidget() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([{ role: "bot", text: "¡Hola! Soy el asistente virtual de Automata. Puedo contarte qué hacemos y ayudarte a identificar oportunidades para tu negocio. ¿Qué necesitas resolver?" }]);
   const [handoffText, setHandoffText] = useState("");
+  const [contactName, setContactName] = useState("");
+  const [companyName, setCompanyName] = useState("");
   const [shareConsent, setShareConsent] = useState(false);
   const [showHandoff, setShowHandoff] = useState(false);
   const [handoffRequested, setHandoffRequested] = useState(false);
@@ -212,7 +214,9 @@ export default function ChatWidget() {
 
   const continueOnWhatsApp = () => {
     if (!shareConsent || !handoffText.trim()) return;
-    const url = "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(handoffText.trim());
+    const contactLines = [contactName.trim() ? "Contacto: " + contactName.trim() : "", companyName.trim() ? "Empresa: " + companyName.trim() : ""].filter(Boolean);
+    const message = contactLines.length ? handoffText.trim().replace("FICHA COMERCIAL | AUTOMATA", "FICHA COMERCIAL | AUTOMATA\\n" + contactLines.join("\\n")) : handoffText.trim();
+    const url = "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(message);
     trackEvent("whatsapp_click");
     window.open(url, "_blank", "noopener,noreferrer");
   };
@@ -232,9 +236,12 @@ export default function ChatWidget() {
           {showHandoff && <section className="automata-handoff">
             <div className="automata-handoff-heading"><strong>Continúa sin repetir tu historia</strong><span>Tu resumen para WhatsApp</span></div>
             <button type="button" className="automata-handoff-back" onClick={() => setShowHandoff(false)}>Volver a conversar</button>
-            <p className="automata-handoff-copy">Revisa y edita lo que compartiremos con el equipo de Automata. Solo se enviará si marcas tu autorización y pulsas el botón.</p>
+            <p className="automata-handoff-copy">Añade tus datos de contacto si lo deseas. Son opcionales; el equipo podrá continuar aunque los dejes vacíos.</p>
+            <input aria-label="Tu nombre (opcional)" value={contactName} onChange={(event) => setContactName(event.target.value)} placeholder="Tu nombre (opcional)" maxLength={80} />
+            <input aria-label="Empresa o negocio (opcional)" value={companyName} onChange={(event) => setCompanyName(event.target.value)} placeholder="Empresa o negocio (opcional)" maxLength={100} />
+            <p className="automata-handoff-copy">Revisa y edita el resumen comercial que compartiremos con el equipo.</p>
             <textarea aria-label="Resumen editable para WhatsApp" value={handoffText} onChange={(event) => { setHandoffText(event.target.value); setShareConsent(false); }} rows={8} />
-            <label className="automata-handoff-consent"><input type="checkbox" checked={shareConsent} onChange={(event) => setShareConsent(event.target.checked)} /> Autorizo compartir este resumen y los mensajes incluidos con el equipo de Automata por WhatsApp.</label>
+            <label className="automata-handoff-consent"><input type="checkbox" checked={shareConsent} onChange={(event) => setShareConsent(event.target.checked)} /> Autorizo compartir este resumen y los datos de contacto que he proporcionado con el equipo de Automata por WhatsApp.</label>
             <button type="button" className="automata-handoff-button" onClick={continueOnWhatsApp} disabled={!shareConsent || !handoffText.trim()}><MessageCircle size={17} /> Continuar por WhatsApp <ArrowUpRight size={16} /></button>
           </section>}
           {isThinking && <div className="automata-chat-message bot" role="status">Autómata está pensando...</div>}
