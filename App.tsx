@@ -1,11 +1,8 @@
 import React, { useState } from "react";
 import ChatWidget from "./ChatWidget";
-import { ArrowDown, ArrowRight, ArrowUpRight, Bot, CalendarCheck, Check, ChevronDown, Clock, Coffee, CupSoda, CakeSlice, Menu, MessageCircle, Minus, Plus, Sandwich, Scissors, Sparkles, Globe, Workflow, Brain, ShoppingBag, X } from "lucide-react";
+import { ArrowDown, ArrowRight, Bot, CalendarCheck, Check, ChevronDown, Clock, Coffee, CupSoda, CakeSlice, Menu, MessageCircle, Minus, Plus, Sandwich, Scissors, Sparkles, Globe, Workflow, Brain, ShoppingBag, X } from "lucide-react";
 import logoFull from "./assets/42a5f50319bf92a6-automataF.png";
 import iconOnly from "./assets/d3d0ef7bd1bb0246-automata.png";
-
-const WA = "https://wa.me/59176192899";
-const WA_TEXT = "https://wa.me/59176192899?text=Hola%20Automata,%20quiero%20una%20evaluación%20para%20mi%20negocio";
 
 const pain = [
   { n: "01", icon: MessageCircle, title: "Respondes lo mismo 20 veces al día", after: "Lo responde Autómata.", color: "#FFF1E8" },
@@ -49,19 +46,13 @@ export default function App() {
   const [salonTime, setSalonTime] = useState("10:00");
   const [salonName, setSalonName] = useState("");
   const [salonDone, setSalonDone] = useState<string | null>(null);
-  const [task, setTask] = useState("");
 
   const cartCount = Object.values(cart).reduce((a, b) => a + b, 0);
   const cartTotal = dishes.reduce((s, it) => s + (cart[it.id] || 0) * it.price, 0);
   const add = (id: string) => { setCart((c) => ({ ...c, [id]: (c[id] || 0) + 1 })); setOrderDone(false); };
   const remove = (id: string) => setCart((c) => { const n = { ...c }; n[id] = Math.max(0, (n[id] || 0) - 1); if (n[id] === 0) delete n[id]; return n; });
 
-  const submitContact = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!task.trim()) return;
-    const message = `Hola Automata, quiero una evaluación para mi negocio. La tarea que más se repite es: ${task.trim()}`;
-    window.open(`https://wa.me/59176192899?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
-  };
+  const openAssistant = () => window.dispatchEvent(new Event("automata:open-chat"));
 
   const nav = [
     { label: "Soluciones", href: "#soluciones" },
@@ -78,11 +69,11 @@ export default function App() {
           <a href="#inicio" className="flex items-center" aria-label="Automata — Inicio"><img src={logoFull} alt="Automata" className="h-[36px] w-auto object-contain sm:h-[42px]" /></a>
           <nav className="hidden items-center gap-7 lg:flex" aria-label="Navegación principal">{nav.map((n) => <a key={n.href} href={n.href} className="text-[14px] font-semibold text-[#5A6068] hover:text-[#0E1116]">{n.label}</a>)}</nav>
           <div className="flex items-center gap-3">
-            <a href={WA} target="_blank" rel="noopener" className="hidden min-h-[48px] items-center gap-2 rounded-full bg-[#FF5A00] px-5 text-[14px] font-bold text-white transition hover:bg-[#E14E00] sm:flex">Quiero mi web <ArrowUpRight size={17} /></a>
+            <button type="button" onClick={openAssistant} className="hidden min-h-[48px] items-center gap-2 rounded-full bg-[#FF5A00] px-5 text-[14px] font-bold text-white transition hover:bg-[#E14E00] sm:flex">Hablar con Autómata <Bot size={17} /></button>
             <button onClick={() => setMenuOpen(!menuOpen)} className="flex min-h-[48px] min-w-[48px] items-center justify-center rounded-full border border-[#E8E6E1] lg:hidden" aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"} aria-expanded={menuOpen}>{menuOpen ? <X size={20} /> : <Menu size={20} />}</button>
           </div>
         </div>
-        {menuOpen && <div className="border-t border-[#E8E6E1] bg-white px-5 py-4 lg:hidden"><nav className="flex flex-col" aria-label="Navegación móvil">{nav.map((n) => <a key={n.href} href={n.href} onClick={() => setMenuOpen(false)} className="flex min-h-[48px] items-center border-b border-[#E8E6E1] text-[15px] font-semibold last:border-0">{n.label}</a>)}<a href={WA} target="_blank" rel="noopener" className="mt-4 flex min-h-[48px] items-center justify-center gap-2 rounded-full bg-[#FF5A00] px-5 text-[14px] font-bold text-white">Quiero mi web <ArrowUpRight size={17} /></a></nav></div>}
+        {menuOpen && <div className="border-t border-[#E8E6E1] bg-white px-5 py-4 lg:hidden"><nav className="flex flex-col" aria-label="Navegación móvil">{nav.map((n) => <a key={n.href} href={n.href} onClick={() => setMenuOpen(false)} className="flex min-h-[48px] items-center border-b border-[#E8E6E1] text-[15px] font-semibold last:border-0">{n.label}</a>)}<button type="button" onClick={() => { setMenuOpen(false); openAssistant(); }} className="mt-4 flex min-h-[48px] items-center justify-center gap-2 rounded-full bg-[#FF5A00] px-5 text-[14px] font-bold text-white">Hablar con Autómata <Bot size={17} /></button></nav></div>}
       </header>
 
       <main>
@@ -95,7 +86,7 @@ export default function App() {
               <p className="reveal-3 mt-6 text-[18px] font-medium leading-snug text-[#5A6068] sm:text-[20px]">Automatizamos lo repetitivo para que atiendas mejor.</p>
               <div className="reveal-3 mt-8 flex flex-col gap-3 sm:flex-row">
                 <a href="#demos" className="flex min-h-[56px] flex-1 items-center justify-center gap-2 rounded-full bg-[#0E1116] px-7 text-[15px] font-bold text-white sm:flex-none">Ver demos en vivo <ArrowDown size={18} /></a>
-                <a href={WA_TEXT} target="_blank" rel="noopener" className="flex min-h-[56px] flex-1 items-center justify-center gap-2 rounded-full border-2 border-[#0E1116] px-7 text-[15px] font-bold sm:flex-none">WhatsApp <MessageCircle size={18} /></a>
+                <button type="button" onClick={openAssistant} className="flex min-h-[56px] flex-1 items-center justify-center gap-2 rounded-full border-2 border-[#0E1116] px-7 text-[15px] font-bold sm:flex-none">Hablar con Autómata <Bot size={18} /></button>
               </div>
             </div>
             <div className="mx-auto flex w-full max-w-[420px] flex-col items-center text-center">
@@ -132,7 +123,7 @@ export default function App() {
                   <button onClick={() => setOpenSolution(open ? null : i)} aria-expanded={open} className="w-full text-left"><div className="flex items-start justify-between"><span className="flex h-[58px] w-[58px] items-center justify-center rounded-2xl text-white" style={{ background: s.color }}><s.icon size={28} /></span><ChevronDown size={22} className={`transition-transform ${open ? "rotate-180" : ""}`} /></div><h3 className="display mt-8 text-[30px] leading-[0.95]">{s.title}</h3><p className="mt-3 text-[15px] font-medium text-[#5A6068]">{s.line}</p></button>
                   {open && <p className="pop mt-5 rounded-2xl bg-white p-4 text-[14px] font-semibold leading-snug">{s.example}</p>}
                 </article>); })}
-              <div className="flex flex-col justify-between rounded-[28px] bg-[#FF5A00] p-6 text-white sm:p-7"><h3 className="display text-[32px] leading-[0.95]">¿Cuál es tu cuello de botella?</h3><a href="#contacto" className="mt-8 flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-white px-5 text-[14px] font-bold text-[#0E1116]">Cuéntanos <ArrowRight size={17} /></a></div>
+              <div className="flex flex-col justify-between rounded-[28px] bg-[#FF5A00] p-6 text-white sm:p-7"><h3 className="display text-[32px] leading-[0.95]">¿Cuál es tu cuello de botella?</h3><button type="button" onClick={openAssistant} className="mt-8 flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-white px-5 text-[14px] font-bold text-[#0E1116]">Cuéntanos <ArrowRight size={17} /></button></div>
             </div>
           </div>
         </section>
@@ -206,17 +197,11 @@ export default function App() {
         {/* CIERRE */}
         <section id="contacto" className="bg-[#0E1116] py-16 text-white sm:py-20 lg:py-24">
           <div className="mx-auto max-w-[1220px] px-5 text-center sm:px-8">
-            <h2 className="display mx-auto mt-8 max-w-[900px] text-[44px] sm:text-[72px] lg:text-[88px]">¿Qué tarea te quita más tiempo?</h2>
-            <a href={WA_TEXT} target="_blank" rel="noopener" className="mx-auto mt-9 flex min-h-[64px] w-full max-w-[480px] items-center justify-center gap-2 rounded-full bg-[#FF5A00] px-7 text-[17px] font-extrabold text-white transition hover:bg-[#E14E00] sm:w-auto">Conversar por WhatsApp <MessageCircle size={20} /></a>
-            <p className="mt-4 text-[14px] text-white/60">+591 76192899 • Tarija, Bolivia</p>
-            <div className="mx-auto mt-10 max-w-[560px] rounded-[28px] border border-white/15 bg-white/5 p-5 text-left sm:p-6">
-              <form onSubmit={submitContact} noValidate>
-                <label htmlFor="task" className="text-[15px] font-bold">¿Qué tarea se repite más en tu negocio?</label>
-                <input id="task" value={task} onChange={(e) => setTask(e.target.value)} placeholder="Ejemplo: responder las mismas preguntas" className="mt-3 !border-white/20 !bg-white !text-[#0E1116]" />
-                <p className="mt-3 text-[13px] text-white/60">Se abrirá WhatsApp con tu consulta preparada para que puedas revisarla antes de enviarla.</p>
-                <button type="submit" className="mt-4 flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-white text-[15px] font-extrabold text-[#0E1116]">Continuar por WhatsApp <ArrowRight size={17} /></button>
-              </form>
-            </div>
+            <p className="text-[12px] font-bold uppercase tracking-[0.22em] text-[#FF5A00]">Primer contacto</p>
+            <h2 className="display mx-auto mt-5 max-w-[900px] text-[44px] sm:text-[72px] lg:text-[88px]">Cuéntale a Autómata qué necesita tu negocio.</h2>
+            <p className="mx-auto mt-6 max-w-[620px] text-[16px] leading-relaxed text-white/65">Empieza por aquí. Nuestro asistente te ayudará a entender opciones, identificar oportunidades y preparar el contexto antes de pasar a una conversación por WhatsApp.</p>
+            <button type="button" onClick={openAssistant} className="mx-auto mt-9 flex min-h-[64px] w-full max-w-[480px] items-center justify-center gap-3 rounded-full bg-[#FF5A00] px-7 text-[17px] font-extrabold text-white transition hover:bg-[#E14E00] sm:w-auto">Hablar con Autómata <Bot size={21} /></button>
+            <p className="mt-4 text-[13px] text-white/50">WhatsApp estará disponible desde el asistente, con el resumen de tu consulta y tu autorización.</p>
           </div>
         </section>
       </main>
