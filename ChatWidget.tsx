@@ -87,7 +87,7 @@ function buildHandoffSummary(messages: Message[]) {
   ];
   for (const [pattern, label] of needRules) if (pattern.test(normalized)) needs.push(label);
 
-  const askedForHuman = messages.some((message) => message.role === "user" && requestsHumanHandoff(message));
+  const askedForHuman = messages.some((message) => message.role === "user" && requestsHumanHandoff(message.text));
   const askedAboutPricing = /\b(precio|precios|cotizacion|cotizar|costo|costos|presupuesto)\b/.test(normalized);
   const lines = [
     "FICHA COMERCIAL | AUTOMATA",
