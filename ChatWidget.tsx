@@ -47,8 +47,8 @@ function buildHandoffSummary(messages: Message[]) {
     /(?:empresa de|negocio de|servicio de)\s+([^.!?]+)/i
   ]);
   const objective = firstMatch([
-    /(?:necesito|quiero|busco|mi objetivo es|me gustaría)\s+([^.!?]+)/i,
-    /(?:ampliar|expandir|aumentar|captar)\s+([^.!?]+)/i
+    /(?:necesito|quiero|busco|mi objetivo es|me gustaría)\s+(.{1,120}?)(?:\s+(?:ya que|porque|debido a|para)\b|[,!.?]|$)/i,
+    /(?:ampliar|expandir|aumentar|captar)\s+(.{1,100}?)(?:\s+(?:ya que|porque|debido a|para)\b|[,!.?]|$)/i
   ]);
   const budgetMatch = allText.match(/(?:presupuesto|cuento con|dispongo de)[^.!?]{0,45}?(\d[\d.,\s]*\s?(?:bs\.?|bolivianos))/i)
     || allText.match(/(\d[\d.,\s]*\s?(?:bs\.?|bolivianos))/i);
