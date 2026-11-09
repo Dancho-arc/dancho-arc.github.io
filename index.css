@@ -78,3 +78,17 @@ label{font-size:13px;font-weight:700;letter-spacing:.02em}
 .automata-chat-note{display:flex;align-items:center;justify-content:center;gap:5px;margin:0;padding:0 12px 12px;background:#fff;color:#777;font-size:10px;text-align:center}
 @media(max-width:480px){.automata-chat-root{right:14px;bottom:14px}.automata-chat-panel{right:-2px;bottom:70px;width:calc(100vw - 24px);height:min(620px,calc(100dvh - 94px));border-radius:20px}.automata-chat-launcher{min-height:54px;padding:0 17px}}
 @media(prefers-reduced-motion:reduce){.automata-chat-panel,.automata-chat-launcher{animation:none;transition:none}}
+
+
+/* Transferencia contextual a WhatsApp */
+.automata-handoff{display:flex;flex-direction:column;gap:10px;margin-top:8px;padding:15px;border:1px solid #E8E6E1;border-radius:18px;background:#fff;color:#0E1116}
+.automata-handoff-heading strong,.automata-handoff-heading span{display:block}
+.automata-handoff-heading strong{font-size:14px;font-weight:800}
+.automata-handoff-heading span{margin-top:3px;color:#FF5A00;font-size:11px;font-weight:800}
+.automata-handoff-copy{margin:0;color:#5A6068;font-size:11px;line-height:1.5}
+.automata-handoff textarea{width:100%;min-height:150px;resize:vertical;border:1px solid #E8E6E1;border-radius:12px;padding:11px;color:#0E1116;background:#fff;font:12px/1.5 Inter,system-ui,sans-serif;white-space:pre-wrap}
+.automata-handoff textarea:focus{outline:2px solid rgba(255,90,0,.22);border-color:#FF5A00}
+.automata-handoff-consent{display:flex;align-items:flex-start;gap:8px;color:#5A6068;font-size:10px;font-weight:500;line-height:1.45;letter-spacing:0}
+.automata-handoff-consent input{width:16px;height:16px;flex:0 0 16px;margin:0;accent-color:#FF5A00}
+.automata-handoff-button{display:flex;min-height:44px;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;background:#FF5A00;color:#fff;font-size:12px;font-weight:800;cursor:pointer}
+.automata-handoff-button:disabled{opacity:.4;cursor:not-allowed}
