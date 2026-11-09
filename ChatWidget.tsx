@@ -2,9 +2,14 @@ import React, { FormEvent, useEffect, useRef, useState } from "react";
 import { Bot, MessageCircle, Send, Sparkles, X, ArrowUpRight } from "lucide-react";
 
 type Message = { role: "bot" | "user"; text: string };
+const WHATSAPP_NUMBER = "59176192899";
 const quick = ["¿Qué hace Automata?", "¿Hacen publicidad con IA?", "Tengo un negocio de vinos", "Quiero automatizar pedidos por WhatsApp"];
 const CHAT_API_URL = "https://automata-chat.dgckg-trd1.workers.dev";
 const LOCAL_SESSION_ID = () => typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `session-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+function normalize(value: string) {
+  return value.toLocaleLowerCase("es").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").replace(/[^a-z0-9\\s]/g, " ").replace(/\\s+/g, " ").trim();
+}
+
 function buildHandoffSummary(messages: Message[]) {
   const userMessages = messages
     .filter((message) => message.role === "user")
@@ -130,7 +135,7 @@ export default function ChatWidget() {
           <input value={input} onChange={(event) => setInput(event.target.value)} placeholder="Escribe tu consulta..." aria-label="Escribe tu consulta" maxLength={1800} disabled={isThinking} />
           <button type="submit" disabled={!input.trim() || isThinking} aria-label="Enviar mensaje"><Send size={18} /></button>
         </form>
-        <p className="automata-chat-note"><Sparkles size={12} /> "Asistente con IA de Automata · OpenRouter" No incluyas datos sensibles. WhatsApp solo se abre con tu autorización.</p>
+        <p className="automata-chat-note"><Sparkles size={12} /> Asistente con IA de Automata · OpenRouter. No incluyas datos sensibles. WhatsApp solo se abre con tu autorización.</p>
       </section>}
       <button type="button" className="automata-chat-launcher" onClick={() => setOpen((value) => !value)} aria-label={open ? "Cerrar asistente" : "Abrir asistente"}>
         {open ? <X size={24} /> : <MessageCircle size={24} />}
