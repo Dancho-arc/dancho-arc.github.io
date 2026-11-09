@@ -11,6 +11,15 @@ function normalize(value: string) {
   return value.toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
 }
 
+function requestsHumanHandoff(value: string) {
+  const text = normalize(value);
+  const person = /\b(humano|humana|humnao|humna|umano|persona|personas|asesor|asesora|agente|equipo|alguien)\b/.test(text);
+  const contactIntent = /\b(hablar|contactar|comunicarme|comunicar|pasar|derivar|conectar|llamar|llamada|whatsapp)\b/.test(text);
+  const directRequest = /\b(quiero|quisiera|necesito|puedo|podria|prefiero)\b.{0,45}\b(hablar|contactar|comunicarme|comunicar|pasar|derivar|conectar|llamar|llamada)\b/.test(text);
+  const wantsPersonDirectly = /\b(quiero|quisiera|necesito)\s+(un|una)\s+(humano|humana|humnao|persona|asesor|asesora|agente)\b/.test(text);
+  return (person && contactIntent) || (directRequest && (person || /\b(whatsapp|equipo)\b/.test(text))) || wantsPersonDirectly;
+}
+
 function buildHandoffSummary(messages: Message[]) {
   const userMessages = messages
     .filter((message) => message.role === "user")
@@ -64,7 +73,7 @@ export default function ChatWidget() {
     const conversation: Message[] = [...messages, { role: "user", text }];
     setMessages(conversation);
     setShareConsent(false);
-    const requestsHuman = /(quiero (hablar|contactar|pasar|comunicarme) con|necesito (hablar|contactar|comunicarme) con|hablar con (alguien|una persona|un asesor|el equipo|un humano)|contactar (con|a|al) (una persona|un asesor|el equipo|alguien)|comunicarme con (una persona|un asesor|el equipo|alguien)|pasar con (una persona|un asesor|el equipo|alguien)|que me (llamen|contacten)|quiero (un asesor|una persona|hablar con alguien)|necesito un humano|continuar por whatsapp|pasar a whatsapp|ir a whatsapp)/i.test(normalize(text));
+    const requestsHuman = requestsHumanHandoff(text);
     if (requestsHuman) {
       setHandoffRequested(true);
       setShowHandoff(true);
@@ -129,7 +138,7 @@ export default function ChatWidget() {
 
   const userMessages = messages.filter((message) => message.role === "user");
   const lastUserMessage = userMessages[userMessages.length - 1]?.text ?? "";
-  const explicitHandoffRequest = /(quiero (hablar|contactar|pasar|comunicarme)|necesito (hablar|contactar|comunicarme)|contactar (con|al)|hablar con (alguien|una persona|un asesor|el equipo|un humano|algun humano)|humano|persona del equipo|pasar a whatsapp|continuar por whatsapp|ir a whatsapp|comunicarme con|asesor)/i.test(normalize(lastUserMessage));
+  const explicitHandoffRequest = requestsHumanHandoff(lastUserMessage);
   const canOfferHandoff = handoffRequested || explicitHandoffRequest;
 
   const continueOnWhatsApp = () => {
