@@ -64,6 +64,16 @@ export default function ChatWidget() {
     const conversation: Message[] = [...messages, { role: "user", text }];
     setMessages(conversation);
     setShareConsent(false);
+    const requestsHuman = /(quiero (hablar|contactar|pasar|comunicarme) con|necesito (hablar|contactar|comunicarme) con|hablar con (alguien|una persona|un asesor|el equipo|un humano)|contactar (con|a|al) (una persona|un asesor|el equipo|alguien)|comunicarme con (una persona|un asesor|el equipo|alguien)|pasar con (una persona|un asesor|el equipo|alguien)|que me (llamen|contacten)|quiero (un asesor|una persona|hablar con alguien)|necesito un humano|continuar por whatsapp|pasar a whatsapp|ir a whatsapp)/i.test(normalize(text));
+    if (requestsHuman) {
+      setHandoffRequested(true);
+      setShowHandoff(true);
+      setHandoffText(buildHandoffSummary(conversation));
+      setMessages([...conversation, { role: "bot", text: "Claro. Dejemos la conversación directamente al equipo. Preparé un resumen editable con lo que ya compartiste; revísalo y autoriza compartirlo para continuar por WhatsApp." }]);
+      setInput("");
+      setIsThinking(false);
+      return;
+    }
     const previousBotMessage = [...messages].reverse().find((message) => message.role === "bot")?.text ?? "";
     const affirmative = /^(si|sí|si por favor|sí por favor|de acuerdo|adelante|por supuesto)[.!\s]*$/i.test(text);
     const authorization = /^(autorizo|lo autorizo|autorizo el envío|autorizo compartir)[.!\s]*$/i.test(text);
@@ -75,7 +85,6 @@ export default function ChatWidget() {
       setIsThinking(false);
       return;
     }
-    if (/(humano|persona|asesor|equipo|hablar con alguien|contactar)/i.test(normalize(text))) setHandoffRequested(true);
     setShowHandoff(false);
     setInput("");
     setIsThinking(true);
