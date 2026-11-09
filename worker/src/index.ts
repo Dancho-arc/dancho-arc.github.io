@@ -268,7 +268,7 @@ export default {
       { role: "system", content: SYSTEM_INSTRUCTION },
       ...contents.map((message) => ({
         role: message.role === "model" ? "assistant" : "user",
-        content: message.parts.map((part) => part.text).join("\\n"),
+        content: message.parts.map((part) => part.text).join("\n"),
       })),
     ];
 
@@ -326,7 +326,7 @@ export default {
               { role: "system", content: SYSTEM_INSTRUCTION },
               ...contents.map((message) => ({
                 role: message.role === "model" ? "assistant" : "user",
-                content: message.parts.map((part) => part.text).join("\\n"),
+                content: message.parts.map((part) => part.text).join("\n"),
               })),
             ],
             stream: false,
