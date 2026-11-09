@@ -8,7 +8,7 @@ const quick = ["¿Qué hace Automata?", "¿Hacen publicidad con IA?", "Tengo un 
 const CHAT_API_URL = "https://automata-chat.dgckg-trd1.workers.dev";
 const LOCAL_SESSION_ID = () => typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `session-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 function normalize(value: string) {
-  return value.toLocaleLowerCase("es").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").replace(/[^a-z0-9\\s]/g, " ").replace(/\\s+/g, " ").trim();
+  return value.toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
 }
 
 function buildHandoffSummary(messages: Message[]) {
