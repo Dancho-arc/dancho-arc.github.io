@@ -1,6 +1,6 @@
 interface Env {
-  GEMINI_API_KEY: string;
-  GEMINI_MODEL?: string;
+  OPENROUTER_API_KEY: string;
+  OPENROUTER_MODEL?: string;
   ALLOWED_ORIGIN?: string;
   SESSION_LIMITER: { limit(input: { key: string }): Promise<{ success: boolean }> };
   IP_LIMITER: { limit(input: { key: string }): Promise<{ success: boolean }> };
@@ -9,7 +9,7 @@ interface Env {
 type ChatMessage = { role: "user" | "model"; parts: Array<{ text: string }> };
 
 const DEFAULT_ORIGIN = "https://automata-bo.github.io";
-const DEFAULT_MODEL = "gemini-3.8-flash";
+const DEFAULT_MODEL = "nvidia/nemotron-3.5-super-vl:free";
 const MAX_MESSAGES = 20;
 const MAX_MESSAGE_CHARS = 1800;
 const MAX_TOTAL_CHARS = 12000;
@@ -124,7 +124,7 @@ export default {
       return json({ error: "Ruta no encontrada." }, 404, origin);
     }
 
-    if (!env.GEMINI_API_KEY) {
+    if (!env.OPENROUTER_API_KEY) {
       return json({ error: "El asistente todavía no está configurado." }, 503, origin);
     }
 
@@ -159,73 +159,81 @@ export default {
     if (!contents) return json({ error: "La conversación no tiene un formato válido o es demasiado extensa." }, 400, origin);
 
     try {
-      const model = env.GEMINI_MODEL || DEFAULT_MODEL;
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+      const model = env.OPENROUTER_MODEL || DEFAULT_MODEL;
+      const openRouterMessages = [
+        { role: "system", content: SYSTEM_INSTRUCTION },
+        ...contents.map((message) => ({
+          role: message.role === "model" ? "assistant" : "user",
+          content: message.parts.map((part) => part.text).join("\n"),
+        })),
+      ];
+
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
+          "Authorization": `Bearer ${env.OPENROUTER_API_KEY}`,
           "Content-Type": "application/json",
-          "x-goog-api-key": env.GEMINI_API_KEY,
+          "HTTP-Referer": DEFAULT_ORIGIN,
+          "X-OpenRouter-Title": "Automata",
         },
         body: JSON.stringify({
-          systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
-          contents,
-          generationConfig: {
-            temperature: 0.65,
-            topP: 0.9,
-            maxOutputTokens: 550,
-            candidateCount: 1,
-          },
+          model,
+          messages: openRouterMessages,
+          temperature: 0.3,
+          max_tokens: 700,
+          reasoning: { enabled: false },
         }),
         signal: AbortSignal.timeout(55000),
       });
 
       if (!response.ok) {
-  const raw = await response.text();
-  let providerMessage = "sin detalle";
+        const raw = await response.text();
+        let providerMessage = "sin detalle";
+        try {
+          const parsed = JSON.parse(raw) as {
+            error?: { code?: number | string; message?: string };
+          };
+          providerMessage = `${parsed.error?.code || "unknown"}: ${(parsed.error?.message || "").slice(0, 300)}`;
+        } catch {
+          providerMessage = raw.slice(0, 300);
+        }
 
-  try {
-    const parsed = JSON.parse(raw) as {
-      error?: { status?: string; message?: string };
-    };
-
-    providerMessage =
-      `${parsed.error?.status || "unknown"}: ${
-        (parsed.error?.message || "").slice(0, 300)
-      }`;
-  } catch {
-    providerMessage = raw.slice(0, 300);
-  }
-
-  console.error(
-    "Gemini upstream failure",
-    response.status,
-    providerMessage
-  );
-
-  const status = response.status === 429 ? 503 : 502;
-
-  return json({
-    error: "El servicio de IA no está disponible en este momento.",
-    diagnostic: response.status
-  }, status, origin);
-}
+        console.error("OpenRouter upstream failure", response.status, providerMessage);
+        const status = response.status === 429 ? 503 : 502;
+        return json({
+          error: "El servicio de IA no está disponible en este momento.",
+          diagnostic: response.status,
+        }, status, origin);
+      }
 
       const payload = await response.json() as {
-        candidates?: Array<{ content?: { parts?: Array<{ text?: string }> }; finishReason?: string }>;
+        choices?: Array<{
+          message?: {
+            content?: string | Array<{ type?: string; text?: string }> | null;
+          };
+          finish_reason?: string | null;
+        }>;
       };
-      const answer = payload.candidates?.[0]?.content?.parts
-        ?.map((part) => part.text || "")
-        .join("")
-        .trim();
+      const messageContent = payload.choices?.[0]?.message?.content;
+      const answer = typeof messageContent === "string"
+        ? messageContent.trim()
+        : Array.isArray(messageContent)
+          ? messageContent.map((part) => typeof part.text === "string" ? part.text : "").join("").trim()
+          : "";
 
       if (!answer) {
-        return json({ error: "No pude preparar una respuesta útil. Reformula tu consulta e inténtalo nuevamente." }, 502, origin);
+        const diagnostic = payload.choices?.[0]?.finish_reason || "empty_content";
+        console.error("OpenRouter returned empty assistant content:", diagnostic);
+        return json({
+          error: "No pude preparar una respuesta útil. Reformula tu consulta e inténtalo nuevamente.",
+          diagnostic,
+        }, 502, origin);
       }
 
       return json({ answer }, 200, origin);
     } catch (error) {
       const diagnostic = error instanceof Error ? error.name : "unknown";
-      console.error("Gemini request exception:", diagnostic);
+      console.error("OpenRouter request exception:", diagnostic);
       return json({
         error: "No pudimos conectar con el asistente. Revisa tu conexión e inténtalo nuevamente.",
         diagnostic
