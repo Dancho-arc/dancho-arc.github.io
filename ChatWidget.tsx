@@ -29,7 +29,15 @@ function buildHandoffSummary(messages: Message[]) {
   const allText = userMessages.join(" ");
   const normalized = normalize(allText);
   const compact = (value: string, max = 120) => {
-    const cleaned = value.replace(/\s+/g, " ").replace(/^[\s,;:.!?¿¡-]+|[\s,;:.!?¿¡-]+$/g, "").trim();
+    const cleaned = value
+      .replace(/\s+/g, " ")
+      .replace(/\bun a\b/gi, "una")
+      .replace(/\bamliar\b/gi, "ampliar")
+      .replace(/\bfrio\b/gi, "frío")
+      .replace(/\brefrigeracion\b/gi, "refrigeración")
+      .replace(/,\s+y mantenimiento a equipos de/gi, " y mantenimiento de equipos de")
+      .replace(/^[\s,;:.!?¿¡-]+|[\s,;:.!?¿¡-]+$/g, "")
+      .trim();
     return cleaned.length > max ? cleaned.slice(0, max - 1).trimEnd() + "…" : cleaned;
   };
   const firstMatch = (patterns: RegExp[]) => {
@@ -50,6 +58,12 @@ function buildHandoffSummary(messages: Message[]) {
     /(?:me estoy expandiendo|nos estamos expandiendo|expansión)\s+(?:de\s+)?([^,.!?]+?\s+a\s+[^,.!?]+)/i,
     /(?:abrir|llegar|expandirme|expandirnos)\s+(?:de\s+)?([^,.!?]+?\s+a\s+[^,.!?]+)/i
   ]);
+  const formattedExpansion = expansion
+    .replace(/\bsucre\b/gi, "Sucre")
+    .replace(/\bpotosi\b/gi, "Potosí")
+    .replace(/\btarija\b/gi, "Tarija")
+    .replace(/\bl a paz\b/gi, "La Paz")
+    .replace(/^(.+?)\s+a\s+(.+)$/i, "desde $1 hacia $2");
   const objective = firstMatch([
     /(?:necesito|quiero|busco|mi objetivo es|me gustaría)\s+(.{1,100}?)(?:\s+(?:ya que|porque|debido a|para)\b|[,!.?]|$)/i,
     /(?:ampliar|expandir|aumentar|captar)\s+(.{1,90}?)(?:\s+(?:ya que|porque|debido a|para)\b|[,!.?]|$)/i
@@ -78,7 +92,7 @@ function buildHandoffSummary(messages: Message[]) {
   const lines = [
     "FICHA COMERCIAL | AUTOMATA",
     business ? "Negocio: " + business : "",
-    expansion ? "Expansión: " + expansion : (cities.length ? "Mercado: " + cities.join(", ") : ""),
+    formattedExpansion ? "Expansión: " + formattedExpansion : (cities.length ? "Mercado: " + cities.join(", ") : ""),
     objective ? "Objetivo: " + objective : "",
     problem ? "Problema: " + problem : "",
     needs.length ? "Solución solicitada: " + needs.join("; ") : "",
