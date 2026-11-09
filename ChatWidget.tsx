@@ -186,7 +186,7 @@ export default function ChatWidget() {
             "Content-Type": "application/json",
             "X-Chat-Session": sessionId.current
           },
-          signal: AbortSignal.timeout(30000),
+          signal: AbortSignal.timeout(60000),
           body: JSON.stringify({
             messages: (() => {
               const recent = conversation.slice(1).slice(-20);
