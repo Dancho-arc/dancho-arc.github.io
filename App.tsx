@@ -1,18 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import ChatWidget from "./ChatWidget";
 import { ArrowDown, ArrowRight, ArrowUpRight, Bot, CalendarCheck, Check, ChevronDown, Clock, Coffee, CupSoda, CakeSlice, Menu, MessageCircle, Minus, Plus, Sandwich, Scissors, Sparkles, Globe, Workflow, Brain, ShoppingBag, X } from "lucide-react";
-import logoFull from "container:///mnt/data/src/assets/42a5f50319bf92a6-automataF.png";
-import iconOnly from "container:///mnt/data/src/assets/d3d0ef7bd1bb0246-automata.png";
+import logoFull from "./assets/42a5f50319bf92a6-automataF.png";
+import iconOnly from "./assets/d3d0ef7bd1bb0246-automata.png";
 
 const WA = "https://wa.me/59176192899";
 const WA_TEXT = "https://wa.me/59176192899?text=Hola%20Automata,%20quiero%20una%20evaluación%20para%20mi%20negocio";
-
-type ApiResult = { data?: any; error?: string };
-async function callApi(action: string, args: Record<string, unknown>): Promise<ApiResult> {
-  const res = await fetch("actions", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action, args }) });
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok || json?.error) throw new Error(json?.error || `Error ${res.status}`);
-  return json as ApiResult;
-}
 
 const pain = [
   { n: "01", icon: MessageCircle, title: "Respondes lo mismo 20 veces al día", after: "Lo responde Autómata.", color: "#FFF1E8" },
@@ -57,32 +50,17 @@ export default function App() {
   const [salonName, setSalonName] = useState("");
   const [salonDone, setSalonDone] = useState<string | null>(null);
   const [task, setTask] = useState("");
-  const [contactBusy, setContactBusy] = useState(false);
-  const [contactError, setContactError] = useState<string | null>(null);
-  const [contactDone, setContactDone] = useState(false);
-  const [apiStatus, setApiStatus] = useState<string | null>(null);
-
-  useEffect(() => {
-    let alive = true;
-    callApi("records.list", { collection: "contact_requests", limit: 1 }).then(() => { if (alive) setApiStatus("ok"); }).catch(() => { if (alive) setApiStatus("unavailable"); });
-    return () => { alive = false; };
-  }, []);
 
   const cartCount = Object.values(cart).reduce((a, b) => a + b, 0);
   const cartTotal = dishes.reduce((s, it) => s + (cart[it.id] || 0) * it.price, 0);
   const add = (id: string) => { setCart((c) => ({ ...c, [id]: (c[id] || 0) + 1 })); setOrderDone(false); };
   const remove = (id: string) => setCart((c) => { const n = { ...c }; n[id] = Math.max(0, (n[id] || 0) - 1); if (n[id] === 0) delete n[id]; return n; });
 
-  const submitContact = async (e: React.FormEvent) => {
+  const submitContact = (e: React.FormEvent) => {
     e.preventDefault();
-    setContactError(null);
-    if (!task.trim()) { setContactError("Cuéntanos qué tarea se repite más."); return; }
-    setContactBusy(true);
-    const key = `contact-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    try {
-      await callApi("records.create", { collection: "contact_requests", value: { business: "", business_type: "", repeated_task: task.trim(), source: "web Automata — Cierre", created_label: "Solicitud de evaluación" }, idempotency_key: key });
-      setContactDone(true);
-    } catch (err) { setContactError(err instanceof Error ? err.message : "No se pudo guardar. Escríbenos por WhatsApp."); } finally { setContactBusy(false); }
+    if (!task.trim()) return;
+    const message = `Hola Automata, quiero una evaluación para mi negocio. La tarea que más se repite es: ${task.trim()}`;
+    window.open(`https://wa.me/59176192899?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
   };
 
   const nav = [
@@ -124,9 +102,9 @@ export default function App() {
               <div className="floaty self-start rounded-2xl border border-[#E8E6E1] bg-white px-4 py-3 shadow-xl"><p className="text-left text-[14px] font-bold">Hola, soy Autómata 👋</p><p className="text-left text-[12px] text-[#5A6068]">¿Qué automatizamos hoy?</p></div>
               <div className="breathe relative mt-2">
                 <div className="absolute inset-x-8 bottom-2 h-[28px] rounded-full bg-[#FF5A00]/15 blur-xl" aria-hidden="true" />
-                <img src={iconOnly} alt="Autómata, el asistente de Automata" className="relative z-10 mx-auto h-[300px] w-auto object-contain sm:h-[380px] lg:h-[400px]" />
+                <button type="button" onClick={() => window.dispatchEvent(new Event("automata:open-chat"))} aria-label="Abrir el asistente de Automata" className="relative z-10 rounded-[32px] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-[#FF5A00]"><img src={iconOnly} alt="Autómata, asistente virtual de Automata" className="mx-auto h-[300px] w-auto object-contain sm:h-[380px] lg:h-[400px]" /></button>
               </div>
-              <div className="mt-2 self-end rounded-full bg-[#0E1116] px-4 py-2 text-[12px] font-bold text-white">● En línea</div>
+              <div className="mt-2 self-end rounded-full bg-[#0E1116] px-4 py-2 text-[12px] font-bold text-white">Asistente virtual · Haz clic para conversar</div>
             </div>
           </div>
           <div className="overflow-hidden border-y-2 border-[#0E1116] bg-[#FF5A00] py-3 text-white">
@@ -232,14 +210,12 @@ export default function App() {
             <a href={WA_TEXT} target="_blank" rel="noopener" className="mx-auto mt-9 flex min-h-[64px] w-full max-w-[480px] items-center justify-center gap-2 rounded-full bg-[#FF5A00] px-7 text-[17px] font-extrabold text-white transition hover:bg-[#E14E00] sm:w-auto">Conversar por WhatsApp <MessageCircle size={20} /></a>
             <p className="mt-4 text-[14px] text-white/60">+591 76192899 • Tarija, Bolivia</p>
             <div className="mx-auto mt-10 max-w-[560px] rounded-[28px] border border-white/15 bg-white/5 p-5 text-left sm:p-6">
-              {contactDone ? <div className="pop py-3 text-center"><span className="mx-auto flex h-[56px] w-[56px] items-center justify-center rounded-full bg-[#FF5A00]"><Check size={26} /></span><h3 className="display mt-4 text-[28px]">Gracias.</h3><p className="mt-2 text-[15px] text-white/70">Te contactamos en menos de 24 horas.</p></div> : (
-                <form onSubmit={submitContact} noValidate>
-                  <label htmlFor="task" className="text-[15px] font-bold">¿Qué tarea se repite más en tu negocio?</label>
-                  <input id="task" value={task} onChange={(e) => setTask(e.target.value)} placeholder="Ejemplo: responder las mismas preguntas" className="mt-3 !border-white/20 !bg-white !text-[#0E1116]" />
-                  {contactError && <p role="alert" className="mt-3 rounded-xl bg-[#FF5A00]/20 px-4 py-3 text-[14px] text-white">{contactError}</p>}
-                  {apiStatus === "unavailable" && <p className="mt-3 text-[13px] text-white/60">El registro no está disponible en esta vista previa. Escríbenos por WhatsApp.</p>}
-                  <button type="submit" disabled={contactBusy} className="mt-4 flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-white text-[15px] font-extrabold text-[#0E1116] disabled:opacity-50">{contactBusy ? "Enviando…" : "Enviar"} <ArrowRight size={17} /></button>
-                </form>)}
+              <form onSubmit={submitContact} noValidate>
+                <label htmlFor="task" className="text-[15px] font-bold">¿Qué tarea se repite más en tu negocio?</label>
+                <input id="task" value={task} onChange={(e) => setTask(e.target.value)} placeholder="Ejemplo: responder las mismas preguntas" className="mt-3 !border-white/20 !bg-white !text-[#0E1116]" />
+                <p className="mt-3 text-[13px] text-white/60">Se abrirá WhatsApp con tu consulta preparada para que puedas revisarla antes de enviarla.</p>
+                <button type="submit" className="mt-4 flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-white text-[15px] font-extrabold text-[#0E1116]">Continuar por WhatsApp <ArrowRight size={17} /></button>
+              </form>
             </div>
           </div>
         </section>
@@ -251,6 +227,7 @@ export default function App() {
           <p className="flex items-center gap-2 text-[13px] font-semibold text-[#5A6068]"><Sparkles size={15} className="text-[#FF5A00]" />No presentamos demos como clientes reales.</p>
         </div>
       </footer>
+      <ChatWidget />
     </div>
   );
 }
