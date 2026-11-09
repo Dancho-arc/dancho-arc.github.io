@@ -4,6 +4,7 @@ interface Env {
   ALLOWED_ORIGIN?: string;
   SESSION_LIMITER: { limit(input: { key: string }): Promise<{ success: boolean }> };
   IP_LIMITER: { limit(input: { key: string }): Promise<{ success: boolean }> };
+  DB: D1Database;
 }
 
 type ChatMessage = { role: "user" | "model"; parts: Array<{ text: string }> };
@@ -75,7 +76,7 @@ function json(data: unknown, status = 200, origin = DEFAULT_ORIGIN): Response {
       "Cache-Control": "no-store",
       "Access-Control-Allow-Origin": origin,
       "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
-      "Access-Control-Allow-Headers": "Content-Type, X-Chat-Session",
+      "Access-Control-Allow-Headers": "Content-Type, X-Chat-Session, X-Analytics-Consent",
       "Vary": "Origin",
       "X-Content-Type-Options": "nosniff",
     },
@@ -123,7 +124,7 @@ export default {
         headers: {
           "Access-Control-Allow-Origin": origin,
           "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
-          "Access-Control-Allow-Headers": "Content-Type, X-Chat-Session",
+          "Access-Control-Allow-Headers": "Content-Type, X-Chat-Session, X-Analytics-Consent",
           "Access-Control-Max-Age": "86400",
           "Vary": "Origin",
         },
@@ -135,7 +136,81 @@ export default {
       if (requestOrigin && requestOrigin !== origin) return json({ error: "Origen no autorizado." }, 403, origin);
       return json({ status: "ok", service: "automata-chat" }, 200, origin);
     }
+
     if (!validOrigin(request, origin)) return json({ error: "Origen no autorizado." }, 403, origin);
+
+    if (request.method === "POST" && url.pathname === "/api/events") {
+      if (request.headers.get("X-Analytics-Consent") !== "yes") return json({ error: "Se requiere consentimiento analítico." }, 403, origin);
+      if (!request.headers.get("Content-Type")?.toLowerCase().includes("application/json")) return json({ error: "Formato no admitido." }, 415, origin);
+      const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+      const limit = await env.IP_LIMITER.limit({ key: "events:" + ip });
+      if (!limit.success) return json({ error: "Demasiados eventos." }, 429, origin);
+      try {
+        const body = await request.json() as { sessionId?: unknown; event?: unknown; category?: unknown; page?: unknown };
+        const sessionId = typeof body.sessionId === "string" ? body.sessionId : "";
+        const event = body.event;
+        const allowedEvents = ["page_view", "chat_open", "chat_message", "whatsapp_click"];
+        const allowedCategories = ["publicidad", "web", "asistentes", "automatizacion", "pedidos", "otro"];
+        const page = typeof body.page === "string" ? body.page.slice(0, 120) : "/";
+        const category = typeof body.category === "string" && allowedCategories.includes(body.category) ? body.category : null;
+        if (!/^[a-f0-9-]{16,64}$/i.test(sessionId) || typeof event !== "string" || !allowedEvents.includes(event)) return json({ error: "Evento no válido." }, 400, origin);
+        await env.DB.prepare("INSERT INTO analytics_events (id, session_id, event_name, category, page_path) VALUES (?, ?, ?, ?, ?)")
+          .bind(crypto.randomUUID(), sessionId, event, category, page).run();
+        return json({ ok: true }, 201, origin);
+      } catch (error) {
+        console.error("Analytics storage failure:", error instanceof Error ? error.name : "unknown");
+        return json({ error: "No pudimos registrar el evento." }, 503, origin);
+      }
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/subscribe") {
+      if (!request.headers.get("Content-Type")?.toLowerCase().includes("application/json")) return json({ error: "Formato no admitido." }, 415, origin);
+      const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+      const limit = await env.IP_LIMITER.limit({ key: "subscribe:" + ip });
+      if (!limit.success) return json({ error: "Demasiados intentos. Prueba más tarde." }, 429, origin);
+      try {
+        const raw = await request.text();
+        if (raw.length > 2000) return json({ error: "Solicitud demasiado extensa." }, 413, origin);
+        const body = JSON.parse(raw) as { channel?: unknown; contact?: unknown; consent?: unknown; consentVersion?: unknown };
+        if (body.consent !== true || body.consentVersion !== "2026-11-09-v1") return json({ error: "Necesitamos tu autorización expresa para enviarte novedades." }, 400, origin);
+        if (body.channel !== "email" && body.channel !== "whatsapp") return json({ error: "Elige un canal válido." }, 400, origin);
+        if (typeof body.contact !== "string" || body.contact.length > 160) return json({ error: "Revisa el dato de contacto." }, 400, origin);
+        let contact = body.contact.trim();
+        let normalized = "";
+        if (body.channel === "email") {
+          normalized = contact.toLowerCase();
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(normalized) || normalized.length > 160) return json({ error: "Introduce un correo válido." }, 400, origin);
+          contact = normalized;
+        } else {
+          normalized = contact.replace(/\D/g, "");
+          if (normalized.startsWith("0")) normalized = normalized.slice(1);
+          if (normalized.length === 8) normalized = "591" + normalized;
+          if (!/^591[67][0-9]{7}$/.test(normalized)) return json({ error: "Introduce un número móvil boliviano válido, con código +591." }, 400, origin);
+          contact = "+" + normalized;
+        }
+        const id = crypto.randomUUID();
+        const unsubscribeToken = crypto.randomUUID() + crypto.randomUUID().replace(/-/g, "");
+        const consentText = "Acepto recibir novedades, lanzamientos y promociones de Automata por el canal que seleccioné. Puedo solicitar la baja cuando quiera.";
+        const result = await env.DB.prepare("INSERT OR IGNORE INTO subscribers (id, channel, contact, normalized_contact, consent_text, consent_version, unsubscribe_token) VALUES (?, ?, ?, ?, ?, ?, ?)")
+          .bind(id, body.channel, contact, normalized, consentText, "2026-11-09-v1", unsubscribeToken).run();
+        if (!result.meta.changes) return json({ error: "Ese contacto ya está registrado. Si quieres actualizar tus preferencias, contacta a Automata." }, 409, origin);
+        return json({ ok: true, message: "Tu suscripción quedó registrada. Gracias por acompañar a Automata." }, 201, origin);
+      } catch (error) {
+        console.error("Subscription storage failure:", error instanceof Error ? error.name : "unknown");
+        return json({ error: "No pudimos guardar tu suscripción. Inténtalo nuevamente." }, 503, origin);
+      }
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/unsubscribe") {
+      try {
+        const body = await request.json() as { token?: unknown };
+        if (typeof body.token !== "string" || !/^[a-f0-9-]{36,80}$/i.test(body.token)) return json({ error: "Enlace de baja no válido." }, 400, origin);
+        const result = await env.DB.prepare("UPDATE subscribers SET status = 'unsubscribed', unsubscribed_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE unsubscribe_token = ? AND status = 'active'").bind(body.token).run();
+        return result.meta.changes ? json({ ok: true }, 200, origin) : json({ error: "No encontramos una suscripción activa para ese enlace." }, 404, origin);
+      } catch {
+        return json({ error: "No pudimos procesar la baja." }, 503, origin);
+      }
+    }
     if (request.method !== "POST" || url.pathname !== "/api/chat") {
       return json({ error: "Ruta no encontrada." }, 404, origin);
     }
