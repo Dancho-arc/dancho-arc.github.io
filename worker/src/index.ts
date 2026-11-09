@@ -1,8 +1,12 @@
 interface Env {
-  OPENROUTER_API_KEY?: string;
-  OPENROUTER_MODEL?: string;
+  OLLAMA_API_KEY?: string;
+  OLLAMA_MODEL?: string;
+  GEMINI_API_KEY?: string;
+  GEMINI_MODEL?: string;
   GROQ_API_KEY?: string;
   GROQ_MODEL?: string;
+  OPENROUTER_API_KEY?: string;
+  OPENROUTER_MODEL?: string;
   ALLOWED_ORIGIN?: string;
   SESSION_LIMITER: { limit(input: { key: string }): Promise<{ success: boolean }> };
   IP_LIMITER: { limit(input: { key: string }): Promise<{ success: boolean }> };
@@ -226,7 +230,7 @@ export default {
       return json({ error: "Ruta no encontrada." }, 404, origin);
     }
 
-    if (!env.OPENROUTER_API_KEY && !env.GROQ_API_KEY) {
+    if (!env.OLLAMA_API_KEY && !env.GEMINI_API_KEY && !env.GROQ_API_KEY && !env.OPENROUTER_API_KEY) {
       return json({ error: "El asistente todavía no está configurado." }, 503, origin);
     }
 
@@ -260,120 +264,168 @@ export default {
     const contents = parseMessages(body.messages);
     if (!contents) return json({ error: "La conversación no tiene un formato válido o es demasiado extensa." }, 400, origin);
 
-    try {
-      const model = env.OPENROUTER_MODEL || DEFAULT_MODEL;
-      const openRouterMessages = [
-        { role: "system", content: SYSTEM_INSTRUCTION },
-        ...contents.map((message) => ({
-          role: message.role === "model" ? "assistant" : "user",
-          content: message.parts.map((part) => part.text).join("\n"),
-        })),
-      ];
+    const openAiMessages = [
+      { role: "system", content: SYSTEM_INSTRUCTION },
+      ...contents.map((message) => ({
+        role: message.role === "model" ? "assistant" : "user",
+        content: message.parts.map((part) => part.text).join("\\n"),
+      })),
+    ];
 
-      let response: Response;
-      if (env.OPENROUTER_API_KEY) {
-        response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const geminiContents = contents.map((message) => ({
+      role: message.role,
+      parts: message.parts.map((part) => ({ text: part.text })),
+    }));
+
+    const timeoutSignal = () => AbortSignal.timeout(12000);
+
+    async function attemptProvider(
+      provider: string,
+      url: string,
+      headers: Record<string, string>,
+      requestBody: unknown,
+      extract: (payload: any) => string,
+    ): Promise<string> {
+      try {
+        const response = await fetch(url, {
           method: "POST",
-          headers: {
+          headers,
+          body: JSON.stringify(requestBody),
+          signal: timeoutSignal(),
+        });
+        if (!response.ok) {
+          console.warn("AI provider unavailable; continuing failover", provider, response.status);
+          return "";
+        }
+        const payload = await response.json() as any;
+        const answer = extract(payload).trim();
+        if (!answer) console.warn("AI provider returned empty content; continuing failover", provider);
+        return answer;
+      } catch (error) {
+        const diagnostic = error instanceof Error ? error.name : "unknown";
+        console.warn("AI provider request failed; continuing failover", provider, diagnostic);
+        return "";
+      }
+    }
+
+    const providers: Array<{ name: string; run: () => Promise<string> }> = [];
+
+    if (env.OLLAMA_API_KEY) {
+      providers.push({
+        name: "ollama",
+        run: () => attemptProvider(
+          "ollama",
+          "https://ollama.com/api/chat",
+          {
+            "Authorization": `Bearer ${env.OLLAMA_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          {
+            model: env.OLLAMA_MODEL || "gemma4:31b",
+            messages: [
+              { role: "system", content: SYSTEM_INSTRUCTION },
+              ...contents.map((message) => ({
+                role: message.role === "model" ? "assistant" : "user",
+                content: message.parts.map((part) => part.text).join("\\n"),
+              })),
+            ],
+            stream: false,
+            options: { temperature: 0.3, num_predict: 700 },
+          },
+          (payload) => typeof payload.message?.content === "string" ? payload.message.content : "",
+        ),
+      });
+    }
+
+    if (env.GEMINI_API_KEY) {
+      const geminiModel = env.GEMINI_MODEL || "gemini-2.5-flash";
+      providers.push({
+        name: "gemini",
+        run: () => attemptProvider(
+          "gemini",
+          `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(geminiModel)}:generateContent`,
+          {
+            "x-goog-api-key": env.GEMINI_API_KEY!,
+            "Content-Type": "application/json",
+          },
+          {
+            systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
+            contents: geminiContents,
+            generationConfig: { temperature: 0.3, maxOutputTokens: 700 },
+          },
+          (payload) => (payload.candidates?.[0]?.content?.parts || [])
+            .map((part: { text?: string }) => typeof part.text === "string" ? part.text : "")
+            .join(""),
+        ),
+      });
+    }
+
+    if (env.GROQ_API_KEY) {
+      providers.push({
+        name: "groq",
+        run: () => attemptProvider(
+          "groq",
+          "https://api.groq.com/openai/v1/chat/completions",
+          {
+            "Authorization": `Bearer ${env.GROQ_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          {
+            model: env.GROQ_MODEL || "openai/gpt-oss-120b",
+            messages: openAiMessages,
+            max_completion_tokens: 700,
+          },
+          (payload) => {
+            const content = payload.choices?.[0]?.message?.content;
+            return typeof content === "string"
+              ? content
+              : Array.isArray(content)
+                ? content.map((part: { text?: string }) => typeof part.text === "string" ? part.text : "").join("")
+                : "";
+          },
+        ),
+      });
+    }
+
+    if (env.OPENROUTER_API_KEY) {
+      providers.push({
+        name: "openrouter",
+        run: () => attemptProvider(
+          "openrouter",
+          "https://openrouter.ai/api/v1/chat/completions",
+          {
             "Authorization": `Bearer ${env.OPENROUTER_API_KEY}`,
             "Content-Type": "application/json",
             "HTTP-Referer": DEFAULT_ORIGIN,
             "X-OpenRouter-Title": "Automata",
           },
-          body: JSON.stringify({
-            model,
-            messages: openRouterMessages,
+          {
+            model: env.OPENROUTER_MODEL || DEFAULT_MODEL,
+            messages: openAiMessages,
             temperature: 0.3,
             max_tokens: 700,
             reasoning: { enabled: false },
-          }),
-          signal: AbortSignal.timeout(55000),
-        });
-      } else {
-        response = new Response(null, { status: 503 });
-      }
-
-      if (!response.ok && env.GROQ_API_KEY && [402, 429, 500, 502, 503, 504].includes(response.status)) {
-        console.warn("OpenRouter unavailable; trying Groq fallback", response.status);
-        const groqResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${env.GROQ_API_KEY}`,
-            "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            model: env.GROQ_MODEL || "llama-3.3-70b-versatile",
-            messages: openRouterMessages,
-            temperature: 0.3,
-            max_tokens: 700,
-          }),
-          signal: AbortSignal.timeout(55000),
-        });
-        if (groqResponse.ok) {
-          const groqPayload = await groqResponse.json() as {
-            choices?: Array<{ message?: { content?: string | null } }>;
-          };
-          const groqAnswer = groqPayload.choices?.[0]?.message?.content?.trim() || "";
-          if (groqAnswer) return json({ answer: groqAnswer, provider: "groq" }, 200, origin);
-          console.error("Groq returned empty assistant content");
-        } else {
-          const groqError = (await groqResponse.text()).slice(0, 300);
-          console.error("Groq fallback failure", groqResponse.status, groqError);
-        }
-      }
-
-      if (!response.ok) {
-        const raw = await response.text();
-        let providerMessage = "sin detalle";
-        try {
-          const parsed = JSON.parse(raw) as {
-            error?: { code?: number | string; message?: string };
-          };
-          providerMessage = `${parsed.error?.code || "unknown"}: ${(parsed.error?.message || "").slice(0, 300)}`;
-        } catch {
-          providerMessage = raw.slice(0, 300);
-        }
-
-        console.error("OpenRouter upstream failure", response.status, providerMessage);
-        const status = response.status === 429 ? 503 : 502;
-        return json({
-          error: "El servicio de IA no está disponible en este momento.",
-          diagnostic: response.status,
-        }, status, origin);
-      }
-
-      const payload = await response.json() as {
-        choices?: Array<{
-          message?: {
-            content?: string | Array<{ type?: string; text?: string }> | null;
-          };
-          finish_reason?: string | null;
-        }>;
-      };
-      const messageContent = payload.choices?.[0]?.message?.content;
-      const answer = typeof messageContent === "string"
-        ? messageContent.trim()
-        : Array.isArray(messageContent)
-          ? messageContent.map((part) => typeof part.text === "string" ? part.text : "").join("").trim()
-          : "";
-
-      if (!answer) {
-        const diagnostic = payload.choices?.[0]?.finish_reason || "empty_content";
-        console.error("OpenRouter returned empty assistant content:", diagnostic);
-        return json({
-          error: "No pude preparar una respuesta útil. Reformula tu consulta e inténtalo nuevamente.",
-          diagnostic,
-        }, 502, origin);
-      }
-
-      return json({ answer }, 200, origin);
-    } catch (error) {
-      const diagnostic = error instanceof Error ? error.name : "unknown";
-      console.error("OpenRouter request exception:", diagnostic);
-      return json({
-        error: "No pudimos conectar con el asistente. Revisa tu conexión e inténtalo nuevamente.",
-        diagnostic
-      }, 502, origin);
+          (payload) => {
+            const content = payload.choices?.[0]?.message?.content;
+            return typeof content === "string"
+              ? content
+              : Array.isArray(content)
+                ? content.map((part: { text?: string }) => typeof part.text === "string" ? part.text : "").join("")
+                : "";
+          },
+        ),
+      });
     }
+
+    for (const provider of providers) {
+      const answer = await provider.run();
+      if (answer) return json({ answer, provider: provider.name }, 200, origin);
+    }
+
+    console.error("All configured AI providers failed or returned empty content");
+    return json({
+      error: "El asistente no está disponible en este momento. Inténtalo nuevamente en unos minutos.",
+    }, 503, origin);
   },
 };
