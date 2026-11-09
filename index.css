@@ -1,0 +1,54 @@
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root{
+  --bg:#FFFFFF;
+  --surface:#FFFFFF;
+  --surface-2:#F4F3F0;
+  --ink:#0E1116;
+  --muted:#5A6068;
+  --muted-2:#8A8F96;
+  --line:#E8E6E1;
+  --accent:#FF5A00;
+  --accent-soft:#FFF1E8;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#FFFFFF;
+    --surface:#FFFFFF;
+    --surface-2:#F4F3F0;
+    --ink:#0E1116;
+    --muted:#5A6068;
+    --muted-2:#8A8F96;
+    --line:#E8E6E1;
+    --accent:#FF5A00;
+    --accent-soft:#FFF1E8;
+  }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+.display{font-family:Archivo,Inter,system-ui,sans-serif;font-weight:900;letter-spacing:-0.045em;line-height:.92}
+a{color:inherit}
+button{font-family:inherit}
+input,select{font-family:inherit;font-size:16px;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;width:100%;outline:none;transition:border-color .2s, box-shadow .2s}
+input:focus,select:focus{border-color:var(--ink);box-shadow:0 0 0 3px rgba(255,90,0,.14)}
+label{font-size:13px;font-weight:700;letter-spacing:.02em}
+::selection{background:#FF5A00;color:#fff}
+@keyframes breathe{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-10px) scale(1.015)}}
+@keyframes floaty{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-8px) rotate(1deg)}}
+@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pop{0%{transform:scale(.92);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes pingSoft{0%{transform:scale(1);opacity:.55}100%{transform:scale(1.55);opacity:0}}
+.reveal{animation:fadeUp .7s ease both}
+.reveal-2{animation:fadeUp .7s .1s ease both}
+.reveal-3{animation:fadeUp .7s .2s ease both}
+.breathe{animation:breathe 4.2s ease-in-out infinite}
+.floaty{animation:floaty 3.4s ease-in-out infinite}
+.marquee-track{animation:marquee 22s linear infinite;will-change:transform}
+.pop{animation:pop .35s ease both}
+.card-lift{transition:transform .28s ease, box-shadow .28s ease, border-color .28s ease}
+.card-lift:hover{transform:translateY(-8px);box-shadow:0 24px 48px rgba(14,17,22,.12)}
