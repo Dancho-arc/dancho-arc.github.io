@@ -180,10 +180,35 @@ export default {
       });
 
       if (!response.ok) {
-        // Do not forward provider details or log user conversation content.
-        const status = response.status === 429 ? 503 : 502;
-        return json({ error: "El servicio de IA no está disponible en este momento. Inténtalo nuevamente en unos minutos." }, status, origin);
-      }
+  const raw = await response.text();
+  let providerMessage = "sin detalle";
+
+  try {
+    const parsed = JSON.parse(raw) as {
+      error?: { status?: string; message?: string };
+    };
+
+    providerMessage =
+      `${parsed.error?.status || "unknown"}: ${
+        (parsed.error?.message || "").slice(0, 300)
+      }`;
+  } catch {
+    providerMessage = raw.slice(0, 300);
+  }
+
+  console.error(
+    "Gemini upstream failure",
+    response.status,
+    providerMessage
+  );
+
+  const status = response.status === 429 ? 503 : 502;
+
+  return json({
+    error: "El servicio de IA no está disponible en este momento.",
+    diagnostic: response.status
+  }, status, origin);
+}
 
       const payload = await response.json() as {
         candidates?: Array<{ content?: { parts?: Array<{ text?: string }> }; finishReason?: string }>;
