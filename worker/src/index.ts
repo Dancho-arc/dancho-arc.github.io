@@ -420,7 +420,10 @@ export default {
 
     for (const provider of providers) {
       const answer = await provider.run();
-      if (answer) return json({ answer, provider: provider.name }, 200, origin);
+      if (answer) {
+        console.log("AI provider succeeded", provider.name);
+        return json({ answer, provider: provider.name }, 200, origin);
+      }
     }
 
     console.error("All configured AI providers failed or returned empty content");
