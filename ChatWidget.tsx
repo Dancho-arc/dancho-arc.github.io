@@ -1,4 +1,5 @@
 import React, { FormEvent, useEffect, useRef, useState } from "react";
+import { trackEvent } from "./analytics";
 import { Bot, MessageCircle, Send, Sparkles, X, ArrowUpRight } from "lucide-react";
 
 type Message = { role: "bot" | "user"; text: string };
@@ -43,7 +44,7 @@ export default function ChatWidget() {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const show = () => setOpen(true);
+    const show = () => { trackEvent("chat_open"); setOpen(true); };
     window.addEventListener("automata:open-chat", show);
     return () => window.removeEventListener("automata:open-chat", show);
   }, []);
@@ -53,6 +54,13 @@ export default function ChatWidget() {
   const send = async (value = input) => {
     const text = value.trim();
     if (!text || isThinking) return;
+    const normalizedText = text.toLocaleLowerCase("es");
+    const category = /publicidad|video|anuncio|campaña/.test(normalizedText) ? "publicidad"
+      : /sitio web|página web|pagina web|web/.test(normalizedText) ? "web"
+      : /asistente|chatbot|atención|atencion/.test(normalizedText) ? "asistentes"
+      : /automatiz|proceso|integración|integracion/.test(normalizedText) ? "automatizacion"
+      : /pedido|reserva|cita|whatsapp/.test(normalizedText) ? "pedidos" : "otro";
+    trackEvent("chat_message", category);
     const conversation: Message[] = [...messages, { role: "user", text }];
     setMessages(conversation);
     setShareConsent(false);
@@ -118,6 +126,7 @@ export default function ChatWidget() {
   const continueOnWhatsApp = () => {
     if (!shareConsent || !handoffText.trim()) return;
     const url = "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(handoffText.trim());
+    trackEvent("whatsapp_click");
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
@@ -150,7 +159,7 @@ export default function ChatWidget() {
         </form>
         <p className="automata-chat-note"><Sparkles size={12} /> Asistente con IA de Automata · OpenRouter. No incluyas datos sensibles. Escribir una autorización en el chat no envía mensajes; el envío se inicia al pulsar Continuar por WhatsApp.</p>
       </section>}
-      <button type="button" className="automata-chat-launcher" onClick={() => setOpen((value) => !value)} aria-label={open ? "Cerrar asistente" : "Abrir asistente"}>
+      <button type="button" className="automata-chat-launcher" onClick={() => { if (!open) trackEvent("chat_open"); setOpen((value) => !value); }} aria-label={open ? "Cerrar asistente" : "Abrir asistente"}>
         {open ? <X size={24} /> : <MessageCircle size={24} />}
         {!open && <span>¿Hablamos?</span>}
       </button>
