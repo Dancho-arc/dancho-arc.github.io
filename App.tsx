@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import ChatWidget from "./ChatWidget";
-import NewsletterSignup from "./NewsletterSignup";
 import CookieConsent from "./CookieConsent";
 import { trackEvent } from "./analytics";
 import { ArrowDown, ArrowRight, Bot, CalendarCheck, Check, ChevronDown, Clock, Coffee, CupSoda, CakeSlice, Clapperboard, Menu, MessageCircle, Minus, Plus, Sandwich, Scissors, Sparkles, Globe, Workflow, Brain, ShoppingBag, X } from "lucide-react";
