@@ -25,19 +25,63 @@ function buildHandoffSummary(messages: Message[]) {
   const userMessages = messages
     .filter((message) => message.role === "user")
     .map((message) => message.text.trim())
-    .filter(Boolean);
-  const lines = [
-    "Hola, equipo de Automata. Quiero continuar una consulta que inicié en su asistente web.",
-    "",
-    "CONTEXTO COMPARTIDO",
-    "Se incluyen hasta los ocho mensajes más recientes que escribí en el asistente, para que el equipo pueda continuar la conversación sin pedirme que repita esa parte del contexto."
+    .filter((message) => message.length > 12);
+  const allText = userMessages.join(" ");
+  const normalized = normalize(allText);
+  const compact = (value: string, max = 150) => {
+    const cleaned = value.replace(/\s+/g, " ").replace(/^[\s,;:.!?¿¡-]+|[\s,;:.!?¿¡-]+$/g, "").trim();
+    return cleaned.length > max ? cleaned.slice(0, max - 1).trimEnd() + "…" : cleaned;
+  };
+  const firstMatch = (patterns: RegExp[]) => {
+    for (const message of userMessages) {
+      for (const pattern of patterns) {
+        const match = message.match(pattern);
+        if (match?.[1]) return compact(match[1]);
+      }
+    }
+    return "";
+  };
+
+  const business = firstMatch([
+    /(?:soy propietario(?: de)?|soy dueño(?: de)?|tengo (?:un|una)|mi negocio es|me dedico a)\s+([^.!?]+)/i,
+    /(?:empresa de|negocio de|servicio de)\s+([^.!?]+)/i
+  ]);
+  const objective = firstMatch([
+    /(?:necesito|quiero|busco|mi objetivo es|me gustaría)\s+([^.!?]+)/i,
+    /(?:ampliar|expandir|aumentar|captar)\s+([^.!?]+)/i
+  ]);
+  const budgetMatch = allText.match(/(?:presupuesto|cuento con|dispongo de)[^.!?]{0,45}?(\d[\d.,\s]*\s?(?:bs\.?|bolivianos))/i)
+    || allText.match(/(\d[\d.,\s]*\s?(?:bs\.?|bolivianos))/i);
+  const cities = ["Sucre", "Potosí", "Tarija", "La Paz", "Cochabamba", "Santa Cruz", "Oruro", "Beni", "Pando"].filter((city) =>
+    new RegExp("\\b" + city.normalize("NFD").replace(/[\u0300-\u036f]/g, "") + "\\b", "i").test(normalized)
+  );
+  const needs: string[] = [];
+  const needRules: Array<[RegExp, string]> = [
+    [/\b(web|pagina web|sitio web)\b/, "Página web"],
+    [/\b(cita|citas|agenda|reservas)\b/, "Gestión de citas"],
+    [/\b(inventario|repuestos|stock)\b/, "Control de inventario/repuestos"],
+    [/\b(whatsapp|pedidos)\b/, "Atención y pedidos por WhatsApp"],
+    [/\b(publicidad|campana|anuncios)\b/, "Publicidad y captación"],
+    [/\b(chatbot|asistente|automatizacion)\b/, "Asistente o automatización"]
   ];
-  lines.push("", "MENSAJES DEL CLIENTE");
-  userMessages.slice(-8).forEach((message) => {
-    const excerpt = message.length > 400 ? message.slice(0, 397) + "..." : message;
-    lines.push("• " + excerpt);
-  });
-  lines.push("", "Quisiera continuar la conversación y recibir orientación sobre el siguiente paso.");
+  for (const [pattern, label] of needRules) if (pattern.test(normalized)) needs.push(label);
+
+  const lines = [
+    "NUEVA OPORTUNIDAD COMERCIAL | AUTOMATA",
+    "",
+    business ? "Actividad: " + business : "",
+    cities.length ? "Ubicación / mercado: " + cities.join(", ") : "",
+    objective ? "Objetivo: " + objective : "",
+    needs.length ? "Necesidades: " + needs.join("; ") : "",
+    budgetMatch ? "Presupuesto mencionado: " + compact(budgetMatch[1], 60) : "",
+    "",
+    "Solicitud: contacto del equipo para evaluar alcance, opciones y cotización.",
+    "Nota: resumen elaborado a partir de los datos compartidos por el visitante; confirmar los detalles pendientes directamente con él."
+  ].filter(Boolean);
+  if (!business && !objective && !needs.length && !budgetMatch && !cities.length) {
+    const lastSubstantive = [...userMessages].reverse().find((message) => !requestsHumanHandoff(message) && message.length > 25);
+    lines.splice(2, 0, "Motivo de consulta: " + (lastSubstantive ? compact(lastSubstantive, 180) : "El visitante solicita contacto con el equipo."));
+  }
   return lines.join("\n");
 }
 
