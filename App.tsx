@@ -1,5 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ChatWidget from "./ChatWidget";
+import NewsletterSignup from "./NewsletterSignup";
+import CookieConsent from "./CookieConsent";
+import { trackEvent } from "./analytics";
 import { ArrowDown, ArrowRight, Bot, CalendarCheck, Check, ChevronDown, Clock, Coffee, CupSoda, CakeSlice, Clapperboard, Menu, MessageCircle, Minus, Plus, Sandwich, Scissors, Sparkles, Globe, Workflow, Brain, ShoppingBag, X } from "lucide-react";
 import logoFull from "./assets/42a5f50319bf92a6-automataF.png";
 import iconOnly from "./assets/d3d0ef7bd1bb0246-automata.png";
@@ -52,6 +55,8 @@ export default function App() {
   const cartTotal = dishes.reduce((s, it) => s + (cart[it.id] || 0) * it.price, 0);
   const add = (id: string) => { setCart((c) => ({ ...c, [id]: (c[id] || 0) + 1 })); setOrderDone(false); };
   const remove = (id: string) => setCart((c) => { const n = { ...c }; n[id] = Math.max(0, (n[id] || 0) - 1); if (n[id] === 0) delete n[id]; return n; });
+
+  useEffect(() => { trackEvent("page_view"); }, []);
 
   const openAssistant = () => window.dispatchEvent(new Event("automata:open-chat"));
 
@@ -208,6 +213,7 @@ export default function App() {
             <p className="mt-4 text-[13px] text-white/50">WhatsApp estará disponible desde el asistente, con el resumen de tu consulta y tu autorización.</p>
           </div>
         </section>
+        <NewsletterSignup />
       </main>
 
       <footer className="bg-white">
@@ -217,6 +223,7 @@ export default function App() {
         </div>
       </footer>
       <ChatWidget />
+      <CookieConsent />
     </div>
   );
 }
