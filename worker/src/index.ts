@@ -1,6 +1,8 @@
 interface Env {
-  OPENROUTER_API_KEY: string;
+  OPENROUTER_API_KEY?: string;
   OPENROUTER_MODEL?: string;
+  GROQ_API_KEY?: string;
+  GROQ_MODEL?: string;
   ALLOWED_ORIGIN?: string;
   SESSION_LIMITER: { limit(input: { key: string }): Promise<{ success: boolean }> };
   IP_LIMITER: { limit(input: { key: string }): Promise<{ success: boolean }> };
@@ -224,7 +226,7 @@ export default {
       return json({ error: "Ruta no encontrada." }, 404, origin);
     }
 
-    if (!env.OPENROUTER_API_KEY) {
+    if (!env.OPENROUTER_API_KEY && !env.GROQ_API_KEY) {
       return json({ error: "El asistente todavía no está configurado." }, 503, origin);
     }
 
@@ -268,23 +270,57 @@ export default {
         })),
       ];
 
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${env.OPENROUTER_API_KEY}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": DEFAULT_ORIGIN,
-          "X-OpenRouter-Title": "Automata",
-        },
-        body: JSON.stringify({
-          model,
-          messages: openRouterMessages,
-          temperature: 0.3,
-          max_tokens: 700,
-          reasoning: { enabled: false },
-        }),
-        signal: AbortSignal.timeout(55000),
-      });
+      let response: Response;
+      if (env.OPENROUTER_API_KEY) {
+        response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${env.OPENROUTER_API_KEY}`,
+            "Content-Type": "application/json",
+            "HTTP-Referer": DEFAULT_ORIGIN,
+            "X-OpenRouter-Title": "Automata",
+          },
+          body: JSON.stringify({
+            model,
+            messages: openRouterMessages,
+            temperature: 0.3,
+            max_tokens: 700,
+            reasoning: { enabled: false },
+          }),
+          signal: AbortSignal.timeout(55000),
+        });
+      } else {
+        response = new Response(null, { status: 503 });
+      }
+
+      if (!response.ok && env.GROQ_API_KEY && [402, 429, 500, 502, 503, 504].includes(response.status)) {
+        console.warn("OpenRouter unavailable; trying Groq fallback", response.status);
+        const groqResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${env.GROQ_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: env.GROQ_MODEL || "llama-3.3-70b-versatile",
+            messages: openRouterMessages,
+            temperature: 0.3,
+            max_tokens: 700,
+          }),
+          signal: AbortSignal.timeout(55000),
+        });
+        if (groqResponse.ok) {
+          const groqPayload = await groqResponse.json() as {
+            choices?: Array<{ message?: { content?: string | null } }>;
+          };
+          const groqAnswer = groqPayload.choices?.[0]?.message?.content?.trim() || "";
+          if (groqAnswer) return json({ answer: groqAnswer, provider: "groq" }, 200, origin);
+          console.error("Groq returned empty assistant content");
+        } else {
+          const groqError = (await groqResponse.text()).slice(0, 300);
+          console.error("Groq fallback failure", groqResponse.status, groqError);
+        }
+      }
 
       if (!response.ok) {
         const raw = await response.text();
