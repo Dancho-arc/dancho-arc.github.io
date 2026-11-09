@@ -176,7 +176,7 @@ export default {
             candidateCount: 1,
           },
         }),
-        signal: AbortSignal.timeout(25000),
+        signal: AbortSignal.timeout(55000),
       });
 
       if (!response.ok) {
