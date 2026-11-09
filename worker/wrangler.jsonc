@@ -4,6 +4,13 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-11-09",
   "workers_dev": true,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "automata-audience",
+      "database_id": "f785dab9-c0f6-4098-9cf1-364c5f58d1ac"
+    }
+  ],
   "vars": {
     "OPENROUTER_MODEL": "nvidia/nemotron-3.5-super-vl:free",
     "ALLOWED_ORIGIN": "https://automata-bo.github.io"
