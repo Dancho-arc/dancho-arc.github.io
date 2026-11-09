@@ -100,7 +100,7 @@ export default function ChatWidget() {
   const userMessages = messages.filter((message) => message.role === "user");
   const lastUserMessage = userMessages[userMessages.length - 1]?.text ?? "";
   const explicitHandoffRequest = /(quiero (hablar|contactar|pasar|comunicarme)|necesito (hablar|contactar|comunicarme)|contactar (con|al)|hablar con (alguien|una persona|un asesor|el equipo)|pasar a whatsapp|continuar por whatsapp|ir a whatsapp|comunicarme con|asesor|persona del equipo)/i.test(normalize(lastUserMessage));
-  const canOfferHandoff = userMessages.length >= 3 || explicitHandoffRequest;
+  const canOfferHandoff = explicitHandoffRequest;
 
   const continueOnWhatsApp = () => {
     if (!shareConsent || !handoffText.trim()) return;
