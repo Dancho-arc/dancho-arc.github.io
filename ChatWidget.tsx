@@ -37,6 +37,7 @@ export default function ChatWidget() {
   const [handoffText, setHandoffText] = useState("");
   const [shareConsent, setShareConsent] = useState(false);
   const [showHandoff, setShowHandoff] = useState(false);
+  const [handoffRequested, setHandoffRequested] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
   const sessionId = useRef(LOCAL_SESSION_ID());
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -55,6 +56,18 @@ export default function ChatWidget() {
     const conversation: Message[] = [...messages, { role: "user", text }];
     setMessages(conversation);
     setShareConsent(false);
+    const previousBotMessage = [...messages].reverse().find((message) => message.role === "bot")?.text ?? "";
+    const affirmative = /^(si|sí|si por favor|sí por favor|de acuerdo|adelante|por supuesto)[.!\s]*$/i.test(text);
+    const authorization = /^(autorizo|lo autorizo|autorizo el envío|autorizo compartir)[.!\s]*$/i.test(text);
+    if (handoffRequested && affirmative && /resumen/i.test(previousBotMessage)) setShowHandoff(true);
+    if (handoffRequested && authorization) {
+      setShowHandoff(true);
+      setMessages([...conversation, { role: "bot", text: "Tu autorización por escrito no envía la solicitud. Para compartirla, revisa el resumen, marca la casilla de autorización y pulsa «Continuar por WhatsApp». WhatsApp se abrirá para que confirmes el envío desde tu dispositivo." }]);
+      setHandoffText(buildHandoffSummary(conversation));
+      setIsThinking(false);
+      return;
+    }
+    if (/(humano|persona|asesor|equipo|hablar con alguien|contactar)/i.test(normalize(text))) setHandoffRequested(true);
     setShowHandoff(false);
     setInput("");
     setIsThinking(true);
@@ -99,8 +112,8 @@ export default function ChatWidget() {
 
   const userMessages = messages.filter((message) => message.role === "user");
   const lastUserMessage = userMessages[userMessages.length - 1]?.text ?? "";
-  const explicitHandoffRequest = /(quiero (hablar|contactar|pasar|comunicarme)|necesito (hablar|contactar|comunicarme)|contactar (con|al)|hablar con (alguien|una persona|un asesor|el equipo)|pasar a whatsapp|continuar por whatsapp|ir a whatsapp|comunicarme con|asesor|persona del equipo)/i.test(normalize(lastUserMessage));
-  const canOfferHandoff = explicitHandoffRequest;
+  const explicitHandoffRequest = /(quiero (hablar|contactar|pasar|comunicarme)|necesito (hablar|contactar|comunicarme)|contactar (con|al)|hablar con (alguien|una persona|un asesor|el equipo|un humano|algun humano)|humano|persona del equipo|pasar a whatsapp|continuar por whatsapp|ir a whatsapp|comunicarme con|asesor)/i.test(normalize(lastUserMessage));
+  const canOfferHandoff = handoffRequested || explicitHandoffRequest;
 
   const continueOnWhatsApp = () => {
     if (!shareConsent || !handoffText.trim()) return;
