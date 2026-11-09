@@ -6,11 +6,22 @@ const CONSENT_VERSION = "2026-11-09-v1";
 
 export default function NewsletterSignup() {
   const [open, setOpen] = useState(false);
+  const [alreadyOffered, setAlreadyOffered] = useState(false);
   const [channel, setChannel] = useState<"whatsapp" | "email">("whatsapp");
   const [contact, setContact] = useState("");
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
+
+  useEffect(() => {
+    const offer = () => {
+      if (alreadyOffered) return;
+      setAlreadyOffered(true);
+      setOpen(true);
+    };
+    window.addEventListener("automata:offer-newsletter", offer);
+    return () => window.removeEventListener("automata:offer-newsletter", offer);
+  }, [alreadyOffered]);
 
   useEffect(() => {
     if (!open) return;
@@ -57,7 +68,7 @@ export default function NewsletterSignup() {
             </button>
             <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#FF5A00]">Sigamos en contacto</p>
             <h2 id="newsletter-title" className="display mt-3 max-w-[390px] pr-8 text-[34px] sm:text-[42px]">Las próximas ideas llegan por aquí.</h2>
-            <p className="mt-4 max-w-[430px] text-[14px] leading-relaxed text-[#5A6068]">Recibe novedades, lanzamientos y promociones de Automata. Tú eliges el canal. Sin mensajes automáticos por el simple hecho de visitar la web.</p>
+            <p className="mt-4 max-w-[430px] text-[14px] leading-relaxed text-[#5A6068]">Recibe novedades, lanzamientos y promociones de Automata. Tú eliges el canal. Solo te escribiremos si autorizas el registro.</p>
             <form onSubmit={submit} className="mt-6 rounded-[22px] border border-[#E8E6E1] bg-white p-5 sm:p-6">
               <label htmlFor="newsletter-channel" className="block text-xs font-bold text-[#5A6068]">¿Dónde prefieres recibir novedades?</label>
               <select id="newsletter-channel" value={channel} onChange={(event) => { setChannel(event.target.value as "whatsapp" | "email"); setStatus(null); }} className="mt-2">
