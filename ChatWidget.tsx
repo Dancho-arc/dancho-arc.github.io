@@ -29,7 +29,7 @@ function buildHandoffSummary(messages: Message[]) {
   const allText = userMessages.join(" ");
   const normalized = normalize(allText);
   const compact = (value: string, max = 150) => {
-    const cleaned = value.replace(/\\s+/g, " ").replace(/^[\\s,;:.!?¿¡-]+|[\\s,;:.!?¿¡-]+$/g, "").trim();
+    const cleaned = value.replace(/\s+/g, " ").replace(/^[\s,;:.!?¿¡-]+|[\s,;:.!?¿¡-]+$/g, "").trim();
     return cleaned.length > max ? cleaned.slice(0, max - 1).trimEnd() + "…" : cleaned;
   };
   const firstMatch = (patterns: RegExp[]) => {
@@ -43,45 +43,45 @@ function buildHandoffSummary(messages: Message[]) {
   };
 
   const business = firstMatch([
-    /(?:soy propietario(?: de)?|soy dueño(?: de)?|tengo (?:un|una)|mi negocio es|me dedico a)\\s+([^.!?]+)/i,
-    /(?:empresa de|negocio de|servicio de)\\s+([^.!?]+)/i
+    /(?:soy propietario(?: de)?|soy dueño(?: de)?|tengo (?:un|una)|mi negocio es|me dedico a)\s+([^.!?]+)/i,
+    /(?:empresa de|negocio de|servicio de)\s+([^.!?]+)/i
   ]);
   const expansion = firstMatch([
-    /(?:me estoy expandiendo|nos estamos expandiendo|expansión)\\s+(?:de\\s+)?([^,.!?]+?\\s+a\\s+[^,.!?]+)/i,
-    /(?:abrir|llegar|expandirme|expandirnos)\\s+(?:de\\s+)?([^,.!?]+?\\s+a\\s+[^,.!?]+)/i
+    /(?:me estoy expandiendo|nos estamos expandiendo|expansión)\s+(?:de\s+)?([^,.!?]+?\s+a\s+[^,.!?]+)/i,
+    /(?:abrir|llegar|expandirme|expandirnos)\s+(?:de\s+)?([^,.!?]+?\s+a\s+[^,.!?]+)/i
   ]);
   const formattedExpansion = expansion
-    .replace(/\\bsucre\\b/gi, "Sucre")
-    .replace(/\\bpotosi\\b/gi, "Potosí")
-    .replace(/\\btarija\\b/gi, "Tarija")
-    .replace(/\\bla paz\\b/gi, "La Paz")
-    .replace(/^(.+?)\\s+a\\s+(.+)$/i, "desde $1 hacia $2");
+    .replace(/\bsucre\b/gi, "Sucre")
+    .replace(/\bpotosi\b/gi, "Potosí")
+    .replace(/\btarija\b/gi, "Tarija")
+    .replace(/\bla paz\b/gi, "La Paz")
+    .replace(/^(.+?)\s+a\s+(.+)$/i, "desde $1 hacia $2");
   const objective = firstMatch([
-    /(?:necesito|quiero|busco|mi objetivo es|me gustaría)\\s+(.{1,120}?)(?:\\s+(?:ya que|porque|debido a|para)\\b|[,!.?]|$)/i,
-    /(?:ampliar|expandir|aumentar|captar)\\s+(.{1,100}?)(?:\\s+(?:ya que|porque|debido a|para)\\b|[,!.?]|$)/i
+    /(?:necesito|quiero|busco|mi objetivo es|me gustaría)\s+(.{1,120}?)(?:\s+(?:ya que|porque|debido a|para)\b|[,!.?]|$)/i,
+    /(?:ampliar|expandir|aumentar|captar)\s+(.{1,100}?)(?:\s+(?:ya que|porque|debido a|para)\b|[,!.?]|$)/i
   ]);
   const problem = firstMatch([
-    /(?:pierdo|estoy perdiendo|se me escapan|no logro|me cuesta|tenemos problemas con)\\s+(.{1,120}?)(?:[,!.?]|$)/i
+    /(?:pierdo|estoy perdiendo|se me escapan|no logro|me cuesta|tenemos problemas con)\s+(.{1,120}?)(?:[,!.?]|$)/i
   ]);
-  const amountMatch = allText.match(/(?:presupuesto|cuento con|dispongo de|hasta)\\s*[^.!?]{0,45}?(\\d[\\d.,\\s]*\\s?(?:bs\\.?|bolivianos))/i)
-    || allText.match(/(\\d[\\d.,\\s]*\\s?(?:bs\\.?|bolivianos))/i);
+  const amountMatch = allText.match(/(?:presupuesto|cuento con|dispongo de|hasta)\s*[^.!?]{0,45}?(\d[\d.,\s]*\s?(?:bs\.?|bolivianos))/i)
+    || allText.match(/(\d[\d.,\s]*\s?(?:bs\.?|bolivianos))/i);
   const cities = ["Sucre", "Potosí", "Tarija", "La Paz", "Cochabamba", "Santa Cruz", "Oruro", "Beni", "Pando"].filter((city) =>
-    new RegExp("\\\\b" + city.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "") + "\\\\b", "i").test(normalized)
+    new RegExp("\\b" + city.normalize("NFD").replace(/[\u0300-\u036f]/g, "") + "\\b", "i").test(normalized)
   );
   const needs: string[] = [];
   const needRules: Array<[RegExp, string]> = [
-    [/\\b(web|pagina web|sitio web)\\b/, "Página web"],
-    [/\\b(cita|citas|agenda|reservas)\\b/, "Agenda y reservas"],
-    [/\\b(inventario|repuestos|stock)\\b/, "Control de inventario"],
-    [/\\b(whatsapp|pedidos)\\b/, "Atención por WhatsApp"],
-    [/\\b(publicidad|campana|anuncios|video)\\b/, "Publicidad y contenido audiovisual"],
-    [/\\b(chatbot|asistente|automatizacion)\\b/, "Asistente o automatización"]
+    [/\b(web|pagina web|sitio web)\b/, "Página web"],
+    [/\b(cita|citas|agenda|reservas)\b/, "Agenda y reservas"],
+    [/\b(inventario|repuestos|stock)\b/, "Control de inventario"],
+    [/\b(whatsapp|pedidos)\b/, "Atención por WhatsApp"],
+    [/\b(publicidad|campana|anuncios|video)\b/, "Publicidad y contenido audiovisual"],
+    [/\b(chatbot|asistente|automatizacion)\b/, "Asistente o automatización"]
   ];
   for (const [pattern, label] of needRules) if (pattern.test(normalized)) needs.push(label);
 
   const askedForHuman = messages.some((message) => message.role === "user" && requestsHumanHandoff(message.text));
-  const askedAboutPricing = /\\b(precio|precios|cotizacion|cotizar|costo|costos|presupuesto)\\b/.test(normalized);
-  const urgent = /\\b(urgente|con urgencia|lo antes posible|inmediatamente|de inmediato)\\b/.test(normalized);
+  const askedAboutPricing = /\b(precio|precios|cotizacion|cotizar|costo|costos|presupuesto)\b/.test(normalized);
+  const urgent = /\b(urgente|con urgencia|lo antes posible|inmediatamente|de inmediato)\b/.test(normalized);
   const lastSubstantive = [...userMessages].reverse().find((message) => message.length > 25);
   const hasContext = Boolean(business || objective || problem || needs.length || cities.length || amountMatch);
   const lines = [
@@ -101,7 +101,7 @@ function buildHandoffSummary(messages: Message[]) {
     "Fuente: información compartida por el visitante en esta conversación. Verificar los datos antes de tomar decisiones."
   ].filter(Boolean);
   if (!hasContext && lastSubstantive) lines.splice(2, 0, "Contexto compartido: " + compact(lastSubstantive, 180));
-  return lines.join("\\n");
+  return lines.join("\n");
 }
 export default function ChatWidget() {
   const [open, setOpen] = useState(false);
