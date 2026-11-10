@@ -143,7 +143,7 @@ export default function ChatWidget() {
       setHandoffRequested(true);
       setShowHandoff(true);
       setHandoffText(buildHandoffSummary(conversation));
-      setMessages([...conversation, { role: "bot", text: "Claro. Dejemos la conversación directamente al equipo. Preparé un resumen editable con lo que ya compartiste; revísalo y autoriza compartirlo para continuar por WhatsApp." }]);
+      setMessages([...conversation, { role: "bot", text: "Claro. Dejemos la conversación directamente al equipo. Preparé un Brief de Cierre Humano, un resumen editable con lo que ya compartiste; revísalo y autoriza compartirlo para continuar por WhatsApp." }]);
       setInput("");
       setIsThinking(false);
       return;
@@ -216,7 +216,7 @@ export default function ChatWidget() {
   const continueOnWhatsApp = () => {
     if (!shareConsent || !handoffText.trim()) return;
     const contactLines = [contactName.trim() ? "Contacto: " + contactName.trim() : "", companyName.trim() ? "Empresa: " + companyName.trim() : ""].filter(Boolean);
-    const message = contactLines.length ? handoffText.trim().replace("BRIEF DE CIERRE HUMANO | AUTOMATA", "BRIEF DE CIERRE HUMANO | AUTOMATA\\n" + contactLines.join("\\n")) : handoffText.trim();
+    const message = contactLines.length ? handoffText.trim().replace("BRIEF DE CIERRE HUMANO | AUTOMATA", "BRIEF DE CIERRE HUMANO | AUTOMATA\n" + contactLines.join("\n")) : handoffText.trim();
     const url = "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(message);
     trackEvent("whatsapp_click");
     window.open(url, "_blank", "noopener,noreferrer");
@@ -241,7 +241,7 @@ export default function ChatWidget() {
             <input aria-label="Tu nombre (opcional)" value={contactName} onChange={(event) => setContactName(event.target.value)} placeholder="Tu nombre (opcional)" maxLength={80} />
             <input aria-label="Empresa o negocio (opcional)" value={companyName} onChange={(event) => setCompanyName(event.target.value)} placeholder="Empresa o negocio (opcional)" maxLength={100} />
             <p className="automata-handoff-copy">Revisa y edita el brief. El equipo lo utilizará para retomar el caso, validar el alcance y definir el siguiente paso; no es una cotización ni confirma una contratación.</p>
-            <textarea aria-label="Resumen editable para WhatsApp" value={handoffText} onChange={(event) => { setHandoffText(event.target.value); setShareConsent(false); }} rows={8} />
+            <textarea aria-label="Brief de cierre editable para WhatsApp" value={handoffText} onChange={(event) => { setHandoffText(event.target.value); setShareConsent(false); }} rows={8} />
             <label className="automata-handoff-consent"><input type="checkbox" checked={shareConsent} onChange={(event) => setShareConsent(event.target.checked)} /> Autorizo compartir este resumen y los datos de contacto que he proporcionado con el equipo de Automata por WhatsApp.</label>
             <button type="button" className="automata-handoff-button" onClick={continueOnWhatsApp} disabled={!shareConsent || !handoffText.trim()}><MessageCircle size={17} /> Continuar por WhatsApp <ArrowUpRight size={16} /></button>
           </section>}
