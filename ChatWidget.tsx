@@ -28,16 +28,8 @@ function buildHandoffSummary(messages: Message[]) {
     .filter((message) => message.length > 12 && !requestsHumanHandoff(message));
   const allText = userMessages.join(" ");
   const normalized = normalize(allText);
-  const compact = (value: string, max = 120) => {
-    const cleaned = value
-      .replace(/\s+/g, " ")
-      .replace(/\bun a\b/gi, "una")
-      .replace(/\bamliar\b/gi, "ampliar")
-      .replace(/\bfrio\b/gi, "frío")
-      .replace(/\brefrigeracion\b/gi, "refrigeración")
-      .replace(/,\s+y mantenimiento a equipos de/gi, " y mantenimiento de equipos de")
-      .replace(/^[\s,;:.!?¿¡-]+|[\s,;:.!?¿¡-]+$/g, "")
-      .trim();
+  const compact = (value: string, max = 150) => {
+    const cleaned = value.replace(/\\s+/g, " ").replace(/^[\\s,;:.!?¿¡-]+|[\\s,;:.!?¿¡-]+$/g, "").trim();
     return cleaned.length > max ? cleaned.slice(0, max - 1).trimEnd() + "…" : cleaned;
   };
   const firstMatch = (patterns: RegExp[]) => {
@@ -51,64 +43,66 @@ function buildHandoffSummary(messages: Message[]) {
   };
 
   const business = firstMatch([
-    /(?:soy propietario(?: de)?|soy dueño(?: de)?|tengo (?:un|una)|mi negocio es|me dedico a)\s+([^.!?]+)/i,
-    /(?:empresa de|negocio de|servicio de)\s+([^.!?]+)/i
+    /(?:soy propietario(?: de)?|soy dueño(?: de)?|tengo (?:un|una)|mi negocio es|me dedico a)\\s+([^.!?]+)/i,
+    /(?:empresa de|negocio de|servicio de)\\s+([^.!?]+)/i
   ]);
   const expansion = firstMatch([
-    /(?:me estoy expandiendo|nos estamos expandiendo|expansión)\s+(?:de\s+)?([^,.!?]+?\s+a\s+[^,.!?]+)/i,
-    /(?:abrir|llegar|expandirme|expandirnos)\s+(?:de\s+)?([^,.!?]+?\s+a\s+[^,.!?]+)/i
+    /(?:me estoy expandiendo|nos estamos expandiendo|expansión)\\s+(?:de\\s+)?([^,.!?]+?\\s+a\\s+[^,.!?]+)/i,
+    /(?:abrir|llegar|expandirme|expandirnos)\\s+(?:de\\s+)?([^,.!?]+?\\s+a\\s+[^,.!?]+)/i
   ]);
   const formattedExpansion = expansion
-    .replace(/\bsucre\b/gi, "Sucre")
-    .replace(/\bpotosi\b/gi, "Potosí")
-    .replace(/\btarija\b/gi, "Tarija")
-    .replace(/\bl a paz\b/gi, "La Paz")
-    .replace(/^(.+?)\s+a\s+(.+)$/i, "desde $1 hacia $2");
+    .replace(/\\bsucre\\b/gi, "Sucre")
+    .replace(/\\bpotosi\\b/gi, "Potosí")
+    .replace(/\\btarija\\b/gi, "Tarija")
+    .replace(/\\bla paz\\b/gi, "La Paz")
+    .replace(/^(.+?)\\s+a\\s+(.+)$/i, "desde $1 hacia $2");
   const objective = firstMatch([
-    /(?:necesito|quiero|busco|mi objetivo es|me gustaría)\s+(.{1,100}?)(?:\s+(?:ya que|porque|debido a|para)\b|[,!.?]|$)/i,
-    /(?:ampliar|expandir|aumentar|captar)\s+(.{1,90}?)(?:\s+(?:ya que|porque|debido a|para)\b|[,!.?]|$)/i
+    /(?:necesito|quiero|busco|mi objetivo es|me gustaría)\\s+(.{1,120}?)(?:\\s+(?:ya que|porque|debido a|para)\\b|[,!.?]|$)/i,
+    /(?:ampliar|expandir|aumentar|captar)\\s+(.{1,100}?)(?:\\s+(?:ya que|porque|debido a|para)\\b|[,!.?]|$)/i
   ]);
   const problem = firstMatch([
-    /(?:pierdo|estoy perdiendo|se me escapan|no logro)\s+(.{1,100}?)(?:[,!.?]|$)/i
+    /(?:pierdo|estoy perdiendo|se me escapan|no logro|me cuesta|tenemos problemas con)\\s+(.{1,120}?)(?:[,!.?]|$)/i
   ]);
-  const budgetMatch = allText.match(/(?:presupuesto|cuento con|dispongo de)[^.!?]{0,45}?(\d[\d.,\s]*\s?(?:bs\.?|bolivianos))/i)
-    || allText.match(/(\d[\d.,\s]*\s?(?:bs\.?|bolivianos))/i);
+  const amountMatch = allText.match(/(?:presupuesto|cuento con|dispongo de|hasta)\\s*[^.!?]{0,45}?(\\d[\\d.,\\s]*\\s?(?:bs\\.?|bolivianos))/i)
+    || allText.match(/(\\d[\\d.,\\s]*\\s?(?:bs\\.?|bolivianos))/i);
   const cities = ["Sucre", "Potosí", "Tarija", "La Paz", "Cochabamba", "Santa Cruz", "Oruro", "Beni", "Pando"].filter((city) =>
-    new RegExp("\\b" + city.normalize("NFD").replace(/[\u0300-\u036f]/g, "") + "\\b", "i").test(normalized)
+    new RegExp("\\\\b" + city.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "") + "\\\\b", "i").test(normalized)
   );
   const needs: string[] = [];
   const needRules: Array<[RegExp, string]> = [
-    [/\b(web|pagina web|sitio web)\b/, "Página web"],
-    [/\b(cita|citas|agenda|reservas)\b/, "Agenda y distribución de citas"],
-    [/\b(inventario|repuestos|stock)\b/, "Control de inventario de repuestos"],
-    [/\b(whatsapp|pedidos)\b/, "Atención por WhatsApp"],
-    [/\b(publicidad|campana|anuncios)\b/, "Publicidad y captación"],
-    [/\b(chatbot|asistente|automatizacion)\b/, "Asistente o automatización"]
+    [/\\b(web|pagina web|sitio web)\\b/, "Página web"],
+    [/\\b(cita|citas|agenda|reservas)\\b/, "Agenda y reservas"],
+    [/\\b(inventario|repuestos|stock)\\b/, "Control de inventario"],
+    [/\\b(whatsapp|pedidos)\\b/, "Atención por WhatsApp"],
+    [/\\b(publicidad|campana|anuncios|video)\\b/, "Publicidad y contenido audiovisual"],
+    [/\\b(chatbot|asistente|automatizacion)\\b/, "Asistente o automatización"]
   ];
   for (const [pattern, label] of needRules) if (pattern.test(normalized)) needs.push(label);
 
   const askedForHuman = messages.some((message) => message.role === "user" && requestsHumanHandoff(message.text));
-  const askedAboutPricing = /\b(precio|precios|cotizacion|cotizar|costo|costos|presupuesto)\b/.test(normalized);
+  const askedAboutPricing = /\\b(precio|precios|cotizacion|cotizar|costo|costos|presupuesto)\\b/.test(normalized);
+  const urgent = /\\b(urgente|con urgencia|lo antes posible|inmediatamente|de inmediato)\\b/.test(normalized);
+  const lastSubstantive = [...userMessages].reverse().find((message) => message.length > 25);
+  const hasContext = Boolean(business || objective || problem || needs.length || cities.length || amountMatch);
   const lines = [
-    "FICHA COMERCIAL | AUTOMATA",
-    business ? "Negocio: " + business : "",
-    formattedExpansion ? "Expansión: " + formattedExpansion : (cities.length ? "Mercado: " + cities.join(", ") : ""),
-    objective ? "Objetivo: " + objective : "",
-    problem ? "Problema: " + problem : "",
-    needs.length ? "Solución solicitada: " + needs.join("; ") : "",
-    budgetMatch ? "Presupuesto indicado: " + compact(budgetMatch[1], 50) : "",
-    askedForHuman
-      ? "Siguiente paso: contacto humano para continuar el diagnóstico y revisar alcance/precio."
-      : (askedAboutPricing ? "Siguiente paso: aclarar alcance y preparar una cotización." : "Siguiente paso: continuar el diagnóstico comercial."),
-    "Nota interna: datos resumidos de lo compartido por el cliente; confirmar cualquier detalle pendiente."
+    "BRIEF DE CIERRE HUMANO | AUTOMATA",
+    "Motivo: " + (objective || (lastSubstantive ? compact(lastSubstantive, 180) : "El visitante solicita continuar con el equipo.")),
+    business ? "Negocio / actividad: " + business : "",
+    formattedExpansion ? "Expansión: " + formattedExpansion : (cities.length ? "Mercado mencionado: " + cities.join(", ") : ""),
+    problem ? "Problema identificado por el visitante: " + problem : "",
+    needs.length ? "Necesidad / solución a evaluar: " + [...new Set(needs)].join("; ") : "",
+    amountMatch ? "Monto mencionado: " + compact(amountMatch[1], 60) + " (confirmar si corresponde al servicio de Automata o a una compra de terceros)" : "",
+    "Prioridad: " + (urgent ? "el visitante expresó urgencia" : "no indicada por el visitante"),
+    "Acción para el equipo: " + (askedForHuman
+      ? "contactar al visitante, revisar el alcance y acordar el siguiente paso"
+      : (askedAboutPricing ? "aclarar el alcance antes de preparar una cotización" : "validar requisitos y definir si corresponde propuesta o evaluación técnica")),
+    "Pendiente de confirmar: alcance exacto, plazos, responsables y presupuesto del servicio, cuando corresponda.",
+    "Estado: consulta en evaluación; no implica cotización, contratación ni compromiso confirmado.",
+    "Fuente: información compartida por el visitante en esta conversación. Verificar los datos antes de tomar decisiones."
   ].filter(Boolean);
-  if (!business && !objective && !needs.length && !budgetMatch && !cities.length && !problem) {
-    const lastSubstantive = [...userMessages].reverse().find((message) => message.length > 25);
-    lines.splice(1, 0, "Motivo: " + (lastSubstantive ? compact(lastSubstantive, 160) : "El visitante solicita contacto con el equipo."));
-  }
-  return lines.join("\n");
+  if (!hasContext && lastSubstantive) lines.splice(2, 0, "Contexto compartido: " + compact(lastSubstantive, 180));
+  return lines.join("\\n");
 }
-
 export default function ChatWidget() {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
@@ -222,7 +216,7 @@ export default function ChatWidget() {
   const continueOnWhatsApp = () => {
     if (!shareConsent || !handoffText.trim()) return;
     const contactLines = [contactName.trim() ? "Contacto: " + contactName.trim() : "", companyName.trim() ? "Empresa: " + companyName.trim() : ""].filter(Boolean);
-    const message = contactLines.length ? handoffText.trim().replace("FICHA COMERCIAL | AUTOMATA", "FICHA COMERCIAL | AUTOMATA\\n" + contactLines.join("\\n")) : handoffText.trim();
+    const message = contactLines.length ? handoffText.trim().replace("BRIEF DE CIERRE HUMANO | AUTOMATA", "BRIEF DE CIERRE HUMANO | AUTOMATA\\n" + contactLines.join("\\n")) : handoffText.trim();
     const url = "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(message);
     trackEvent("whatsapp_click");
     window.open(url, "_blank", "noopener,noreferrer");
@@ -239,14 +233,14 @@ export default function ChatWidget() {
         <div className="automata-chat-messages" aria-live="polite">
           {messages.map((message, index) => <div key={index} className={`automata-chat-message ${message.role}`}>{message.text}</div>)}
           {messages.length === 1 && <div className="automata-chat-quick">{quick.map((question) => <button key={question} type="button" disabled={isThinking} onClick={() => send(question)}>{question}</button>)}</div>}
-          {canOfferHandoff && !showHandoff && <button type="button" className="automata-handoff-button" onClick={() => setShowHandoff(true)}>Preparar resumen para WhatsApp</button>}
+          {canOfferHandoff && !showHandoff && <button type="button" className="automata-handoff-button" onClick={() => setShowHandoff(true)}>Preparar brief de cierre</button>}
           {showHandoff && <section className="automata-handoff">
-            <div className="automata-handoff-heading"><strong>Continúa sin repetir tu historia</strong><span>Tu resumen para WhatsApp</span></div>
+            <div className="automata-handoff-heading"><strong>Brief de cierre para el equipo</strong><span>Contexto para continuar sin repetir la conversación</span></div>
             <button type="button" className="automata-handoff-back" onClick={() => setShowHandoff(false)}>Volver a conversar</button>
             <p className="automata-handoff-copy">Añade tus datos de contacto si lo deseas. Son opcionales; el equipo podrá continuar aunque los dejes vacíos.</p>
             <input aria-label="Tu nombre (opcional)" value={contactName} onChange={(event) => setContactName(event.target.value)} placeholder="Tu nombre (opcional)" maxLength={80} />
             <input aria-label="Empresa o negocio (opcional)" value={companyName} onChange={(event) => setCompanyName(event.target.value)} placeholder="Empresa o negocio (opcional)" maxLength={100} />
-            <p className="automata-handoff-copy">Revisa y edita el resumen comercial que compartiremos con el equipo.</p>
+            <p className="automata-handoff-copy">Revisa y edita el brief. El equipo lo utilizará para retomar el caso, validar el alcance y definir el siguiente paso; no es una cotización ni confirma una contratación.</p>
             <textarea aria-label="Resumen editable para WhatsApp" value={handoffText} onChange={(event) => { setHandoffText(event.target.value); setShareConsent(false); }} rows={8} />
             <label className="automata-handoff-consent"><input type="checkbox" checked={shareConsent} onChange={(event) => setShareConsent(event.target.checked)} /> Autorizo compartir este resumen y los datos de contacto que he proporcionado con el equipo de Automata por WhatsApp.</label>
             <button type="button" className="automata-handoff-button" onClick={continueOnWhatsApp} disabled={!shareConsent || !handoffText.trim()}><MessageCircle size={17} /> Continuar por WhatsApp <ArrowUpRight size={16} /></button>
