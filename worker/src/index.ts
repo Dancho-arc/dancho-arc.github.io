@@ -74,7 +74,7 @@ DIAGNÓSTICO CONSULTIVO
 - Distingue entre lo que Automata ya ofrece y lo que requeriría diseño, integración o evaluación previa.
 
 TRANSFERENCIA
-No ofrezcas ni menciones WhatsApp por iniciativa propia. Cuando la persona pida hablar con el equipo, contactar a una persona, recibir una llamada o continuar por WhatsApp, deja de diagnosticar y no hagas más preguntas comerciales: la interfaz activará inmediatamente el panel de transferencia con un resumen editable. Puedes confirmarlo en una frase breve. Nunca afirmes que se envió nada, que recibiste una autorización operativa, que el equipo recibió la solicitud ni que alguien se pondrá en contacto. Tú no puedes abrir WhatsApp, enviar mensajes ni notificar al equipo. La autorización solo se recoge mediante la casilla de consentimiento de la interfaz. Al pulsar «Continuar por WhatsApp», la página únicamente abre WhatsApp con un mensaje preparado; el visitante todavía debe pulsar Enviar dentro de WhatsApp. No afirmes que el mensaje fue enviado por el simple hecho de abrir WhatsApp. Si el visitante escribe «autorizo» en el chat, aclara que escribirlo no envía nada y que debe usar los controles visibles de la interfaz. Nunca simules una transferencia ni inventes seguimiento.
+No ofrezcas ni menciones WhatsApp por iniciativa propia. Cuando la persona pida hablar con el equipo, contactar a una persona, recibir una llamada o continuar por WhatsApp, deja de diagnosticar y no hagas más preguntas comerciales: la interfaz activará inmediatamente el panel de transferencia con un Brief de Cierre Humano estructurado y editable. Puedes confirmarlo en una frase breve. Nunca afirmes que se envió nada, que recibiste una autorización operativa, que el equipo recibió la solicitud ni que alguien se pondrá en contacto. Tú no puedes abrir WhatsApp, enviar mensajes ni notificar al equipo. La autorización solo se recoge mediante la casilla de consentimiento de la interfaz. Al pulsar «Continuar por WhatsApp», la página únicamente abre WhatsApp con un mensaje preparado; el visitante todavía debe pulsar Enviar dentro de WhatsApp. No afirmes que el mensaje fue enviado por el simple hecho de abrir WhatsApp. Si el visitante escribe «autorizo» en el chat, aclara que escribirlo no envía nada y que debe usar los controles visibles de la interfaz. Nunca simules una transferencia ni inventes seguimiento.
 
 BREVEDAD Y CONTINUIDAD
 - Responde primero a la pregunta concreta, normalmente en 1 a 3 frases cortas. Amplía solo si la persona pide detalles o la explicación realmente lo exige.
@@ -94,12 +94,54 @@ function json(data: unknown, status = 200, origin = DEFAULT_ORIGIN): Response {
       "Access-Control-Allow-Headers": "Content-Type, X-Chat-Session, X-Analytics-Consent",
       "Vary": "Origin",
       "X-Content-Type-Options": "nosniff",
+      "X-Frame-Options": "DENY",
+      "Referrer-Policy": "no-referrer",
     },
   });
 }
 
 function validOrigin(request: Request, allowedOrigin: string): boolean {
   return request.headers.get("Origin") === allowedOrigin;
+}
+
+type BoundedJsonResult<T> =
+  | { ok: true; value: T }
+  | { ok: false; status: 400 | 413 };
+
+async function readBoundedJson<T>(request: Request, maxBytes: number): Promise<BoundedJsonResult<T>> {
+  const declaredLength = Number(request.headers.get("Content-Length") || 0);
+  if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
+    return { ok: false, status: 413 };
+  }
+  if (!request.body) return { ok: false, status: 400 };
+
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      totalBytes += value.byteLength;
+      if (totalBytes > maxBytes) {
+        await reader.cancel();
+        return { ok: false, status: 413 };
+      }
+      chunks.push(value);
+    }
+    const bytes = new Uint8Array(totalBytes);
+    let offset = 0;
+    for (const chunk of chunks) {
+      bytes.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
+    const parsed = JSON.parse(new TextDecoder().decode(bytes)) as T;
+    return { ok: true, value: parsed };
+  } catch {
+    return { ok: false, status: 400 };
+  } finally {
+    reader.releaseLock();
+  }
 }
 
 function parseMessages(value: unknown): ChatMessage[] | null {
@@ -160,8 +202,10 @@ export default {
       const ip = request.headers.get("CF-Connecting-IP") || "unknown";
       const limit = await env.IP_LIMITER.limit({ key: "events:" + ip });
       if (!limit.success) return json({ error: "Demasiados eventos." }, 429, origin);
+      const parsed = await readBoundedJson<{ sessionId?: unknown; event?: unknown; category?: unknown; page?: unknown }>(request, 2048);
+      if (!parsed.ok) return json({ error: parsed.status === 413 ? "Solicitud demasiado extensa." : "No pudimos leer el evento." }, parsed.status, origin);
       try {
-        const body = await request.json() as { sessionId?: unknown; event?: unknown; category?: unknown; page?: unknown };
+        const body = parsed.value;
         const sessionId = typeof body.sessionId === "string" ? body.sessionId : "";
         const event = body.event;
         const allowedEvents = ["page_view", "chat_open", "chat_message", "whatsapp_click"];
@@ -183,10 +227,10 @@ export default {
       const ip = request.headers.get("CF-Connecting-IP") || "unknown";
       const limit = await env.IP_LIMITER.limit({ key: "subscribe:" + ip });
       if (!limit.success) return json({ error: "Demasiados intentos. Prueba más tarde." }, 429, origin);
+      const parsed = await readBoundedJson<{ channel?: unknown; contact?: unknown; consent?: unknown; consentVersion?: unknown }>(request, 2048);
+      if (!parsed.ok) return json({ error: parsed.status === 413 ? "Solicitud demasiado extensa." : "No pudimos leer la solicitud." }, parsed.status, origin);
       try {
-        const raw = await request.text();
-        if (raw.length > 2000) return json({ error: "Solicitud demasiado extensa." }, 413, origin);
-        const body = JSON.parse(raw) as { channel?: unknown; contact?: unknown; consent?: unknown; consentVersion?: unknown };
+        const body = parsed.value;
         if (body.consent !== true || body.consentVersion !== "2026-11-09-v1") return json({ error: "Necesitamos tu autorización expresa para enviarte novedades." }, 400, origin);
         if (body.channel !== "email" && body.channel !== "whatsapp") return json({ error: "Elige un canal válido." }, 400, origin);
         if (typeof body.contact !== "string" || body.contact.length > 160) return json({ error: "Revisa el dato de contacto." }, 400, origin);
@@ -217,10 +261,16 @@ export default {
     }
 
     if (request.method === "POST" && url.pathname === "/api/unsubscribe") {
+      if (!request.headers.get("Content-Type")?.toLowerCase().includes("application/json")) return json({ error: "Formato no admitido." }, 415, origin);
+      const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+      const limit = await env.IP_LIMITER.limit({ key: "unsubscribe:" + ip });
+      if (!limit.success) return json({ error: "Demasiados intentos de baja. Prueba más tarde." }, 429, origin);
+      const parsed = await readBoundedJson<{ token?: unknown }>(request, 512);
+      if (!parsed.ok) return json({ error: parsed.status === 413 ? "Solicitud demasiado extensa." : "No pudimos leer la solicitud." }, parsed.status, origin);
       try {
-        const body = await request.json() as { token?: unknown };
-        if (typeof body.token !== "string" || !/^[a-f0-9-]{36,80}$/i.test(body.token)) return json({ error: "Enlace de baja no válido." }, 400, origin);
-        const result = await env.DB.prepare("UPDATE subscribers SET status = 'unsubscribed', unsubscribed_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE unsubscribe_token = ? AND status = 'active'").bind(body.token).run();
+        const token = parsed.value.token;
+        if (typeof token !== "string" || !/^[a-f0-9-]{68}$/i.test(token)) return json({ error: "Enlace de baja no válido." }, 400, origin);
+        const result = await env.DB.prepare("UPDATE subscribers SET status = 'unsubscribed', unsubscribed_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE unsubscribe_token = ? AND status = 'active'").bind(token).run();
         return result.meta.changes ? json({ ok: true }, 200, origin) : json({ error: "No encontramos una suscripción activa para ese enlace." }, 404, origin);
       } catch {
         return json({ error: "No pudimos procesar la baja." }, 503, origin);
@@ -252,16 +302,10 @@ export default {
       return json({ error: "Formato de consulta no admitido." }, 415, origin);
     }
 
-    let body: { messages?: unknown };
-    try {
-      const rawBody = await request.text();
-      if (rawBody.length > 20000) return json({ error: "La consulta es demasiado extensa." }, 413, origin);
-      body = JSON.parse(rawBody) as { messages?: unknown };
-    } catch {
-      return json({ error: "No pudimos leer tu consulta." }, 400, origin);
-    }
+    const parsed = await readBoundedJson<{ messages?: unknown }>(request, 48000);
+    if (!parsed.ok) return json({ error: parsed.status === 413 ? "La consulta es demasiado extensa." : "No pudimos leer tu consulta." }, parsed.status, origin);
 
-    const contents = parseMessages(body.messages);
+    const contents = parseMessages(parsed.value.messages);
     if (!contents) return json({ error: "La conversación no tiene un formato válido o es demasiado extensa." }, 400, origin);
 
     const openAiMessages = [
